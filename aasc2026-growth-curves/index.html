@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sharp, honest or robust? Growth-curve models for sparse plant data</title>
+<meta name="description" content="Companion report to the AASC2026 poster: what growth-curve models trade off when plant data are sparse.">
+<style>
+  :root{
+    --gpl:#00808B; --gp:#6CC3CB; --gflog:#414042; --gfnat:#9A9A9A; --spl:#EC8525;
+    --ink:#222; --muted:#5b6166; --line:#d9dee2; --bg:#fff; --soft:#f5f8f9;
+    --measure:46rem;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+  a{color:var(--gpl)}
+  header.top{background:var(--gpl);color:#fff;padding:2.2rem 1.5rem 1.6rem}
+  header.top .in{max-width:62rem;margin:0 auto}
+  header.top h1{margin:.2rem 0 .6rem;font-size:clamp(1.6rem,3.6vw,2.4rem);line-height:1.2}
+  header.top p{margin:.2rem 0;opacity:.95}
+  .kicker{font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+  .authors{font-size:.95rem}
+  .layout{max-width:62rem;margin:0 auto;display:grid;grid-template-columns:13rem 1fr;gap:2rem;padding:0 1.5rem}
+  nav.side{position:sticky;top:0;align-self:start;padding:1.5rem 0;font-size:.92rem;max-height:100vh;overflow:auto}
+  nav.side a{display:block;padding:.28rem .6rem;border-left:3px solid transparent;color:var(--ink);text-decoration:none}
+  nav.side a:hover{border-left-color:var(--gp);background:var(--soft)}
+  nav.side .grp{margin:.9rem 0 .2rem .6rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  main{max-width:var(--measure);padding-bottom:4rem}
+  section{padding-top:2.2rem;border-top:1px solid var(--line);margin-top:2.2rem}
+  section:first-of-type{border-top:none;margin-top:0}
+  h2{font-size:1.5rem;margin:.2rem 0 .8rem;line-height:1.25}
+  h3{font-size:1.1rem;margin:1.6rem 0 .4rem}
+  .sn{color:var(--gpl);font-weight:700;margin-right:.4rem}
+  .summary{background:var(--soft);border-left:4px solid var(--gpl);padding:.8rem 1rem;margin:0 0 1.2rem;border-radius:0 6px 6px 0}
+  .summary b.lbl{display:block;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--gpl);margin-bottom:.2rem}
+  .framing{border:1px solid var(--line);border-radius:6px;padding:.8rem 1rem;background:#fff}
+  .holdout{border:2px solid var(--spl);background:#fff8f0;border-radius:6px;padding:.7rem 1rem;margin:1rem 0;font-size:.95rem}
+  .holdout b{color:#a85a10}
+  .simnote{border:1px dashed var(--gp);background:#f3fbfc;border-radius:6px;padding:.6rem 1rem;margin:1rem 0;font-size:.93rem}
+  .verify{background:#fff4c2;border:1px solid #e3cf6a;border-radius:4px;padding:.05rem .4rem;font-size:.85em;white-space:nowrap}
+  /* arm chips */
+  .chip{display:inline-block;padding:.05rem .55rem;border-radius:99px;color:#fff;font-weight:600;font-size:.9rem;white-space:nowrap}
+  .c-gpl{background:var(--gpl)} .c-gp{background:var(--gp);color:#13353a} .c-gflog{background:var(--gflog)}
+  .c-gfnat{background:var(--gfnat)} .c-spl{background:var(--spl)}
+  /* tables */
+  table{border-collapse:collapse;width:100%;font-size:.93rem;margin:.8rem 0}
+  th,td{border-bottom:1px solid var(--line);padding:.45rem .5rem;text-align:left;vertical-align:top}
+  th{background:var(--soft);font-weight:600}
+  .tblwrap{overflow-x:auto}
+  /* result slots */
+  .slot{border:2px dashed #b8c2c8;border-radius:8px;padding:.9rem 1rem;margin:1rem 0;background:repeating-linear-gradient(135deg,#fafcfc,#fafcfc 10px,#f3f6f7 10px,#f3f6f7 20px)}
+  .slot .tag{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--muted);border-radius:3px;padding:.05rem .4rem;margin-bottom:.3rem}
+  .slot .cap{font-weight:600;margin:.1rem 0}
+  .slot .src{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem;color:var(--muted);word-break:break-all}
+  .slot .need{font-size:.88rem;margin:.3rem 0 0}
+  figure.fig{margin:1rem 0}
+  figure.fig img{max-width:100%;height:auto}
+  figcaption{font-size:.88rem;color:var(--muted)}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em;background:var(--soft);padding:.05rem .3rem;border-radius:3px}
+  details{border:1px solid var(--line);border-radius:6px;padding:.4rem .9rem;margin:.8rem 0}
+  details summary{cursor:pointer;font-weight:600}
+  ul.tight li{margin:.2rem 0}
+  footer{background:var(--soft);border-top:1px solid var(--line);padding:1.5rem}
+  footer .in{max-width:62rem;margin:0 auto;font-size:.9rem;color:var(--muted)}
+  .logos{display:flex;gap:1.4rem;align-items:center;flex-wrap:wrap;margin-top:.8rem}
+  .logos img{width:auto}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .sub{display:block;font-size:.8rem;color:var(--muted);font-weight:400}
+  .cellfail{color:#a33}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  @media (max-width:820px){.twocol{grid-template-columns:1fr}}
+  table.src td,table.src th{font-size:.8rem}
+  table.src td.m{font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all}
+  tr.extra td{background:#fafafa;color:var(--muted)}
+  tr.rule td{border-top:2px solid var(--line)}
+  figure.fig img{width:100%}
+  .logo-ph{border:1px dashed #aab;padding:.5rem .9rem;border-radius:4px;font-size:.8rem;color:var(--muted)}
+  @media (max-width:820px){
+    .layout{grid-template-columns:1fr}
+    nav.side{position:static;max-height:none;border-bottom:1px solid var(--line);padding:.8rem 0}
+    nav.side a{display:inline-block;border:none;padding:.2rem .5rem}
+    nav.side .grp{display:none}
+  }
+  @media print{ nav.side{display:none} .layout{display:block} header.top{color:#000;background:#fff;border-bottom:2px solid #000} }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="in">
+    <div class="kicker">AASC2026 poster companion report</div>
+    <h1>Sharp, honest or robust? What growth-curve models trade off when plant data are sparse</h1>
+    <p class="authors">Andrew F. Bowerman<sup>1,2</sup>, Frederike Stock<sup>3</sup>, Richard Poiré<sup>3</sup>, Emi Tanaka<sup>1,2</sup></p>
+    <p class="authors" style="font-size:.82rem;opacity:.85"><sup>1</sup> Research School of Finance, Actuarial Studies and Statistics, ANU &nbsp;·&nbsp; <sup>2</sup> Analytics for the Australian Grains Industry (AAGI) &nbsp;·&nbsp; <sup>3</sup> Australian Plant Phenomics Network, Research School of Biology, ANU</p>
+    <p class="authors" style="font-size:.82rem">Contact: <a style="color:#fff" href="mailto:andrew.bowerman@anu.edu.au">andrew.bowerman@anu.edu.au</a> &nbsp;·&nbsp; <a style="color:#fff" href="assets/poster_A0_DRAFT21.pdf">Poster (PDF, draft 21)</a></p>
+  </div>
+</header>
+
+<div class="layout">
+<nav class="side" aria-label="Sections">
+  <div class="grp">Start</div>
+  <a href="#home">1 · The short version</a>
+  <a href="#intro">2 · Why this matters</a>
+  <div class="grp">How we did it</div>
+  <a href="#approaches">3 · The four approaches</a>
+  <a href="#data">4 · The data</a>
+  <a href="#methods">5 · Methods</a>
+  <div class="grp">What we found</div>
+  <a href="#simulation">6 · Simulation tests</a>
+  <a href="#arab-desc">7 · Arabidopsis, description</a>
+  <a href="#arab-left">8 · Arabidopsis, left-out readings</a>
+  <div class="grp">Context</div>
+  <a href="#limits">9 · Limits and open questions</a>
+  <a href="#next">10 · What comes next</a>
+  <a href="#sources">11 · Sources</a>
+</nav>
+
+<main>
+
+<!-- 1 HOME ---------------------------------------------------------------->
+<section id="home">
+  <h2><span class="sn">1</span>The short version</h2>
+  <div class="summary"><b class="lbl">In plain language</b>
+    We compared four ways of drawing a growth curve through plant measurements, and asked three questions of each: how sharp is the curve, how honest is its stated uncertainty, and how well does it hold up when readings are few or one is odd. Each method is good at some of these and weaker at others. This report sets out those trade-offs. It does not rank the methods.
+  </div>
+  <div class="framing">
+    <b>How to read this report.</b> The message is <b>trade-offs, not a league table</b>. We make no claim that any method is better overall, and no claim about <em>why</em> any one method's intervals are too narrow or too wide where we did not isolate the cause.
+  </div>
+
+  <figure class="fig"><img src="figs/fig1_sim.svg" alt="Coverage and band width by sampling design, five arms"><figcaption><b>Simulation.</b> Coverage of the true size curve (left) and median band width (right) as readings become fewer. Smooth simulated truths; failed fits count as misses. Details in section 6.</figcaption></figure><figure class="fig"><img src="figs/fig3_calibration.svg" alt="Share of left-out readings inside the 90% interval against interval width"><figcaption><b>Left-out readings.</b> Share of left-out readings inside the 90% interval, against interval width, for H1 to H3. One genotype (Arabidopsis C24, moving plants). GP = frozen, simulation settings, no mean function. Scored on left-out readings only; readings from one plant are not independent. Details in section 8.</figcaption></figure>
+
+  <h3>The four approaches, and the older names you may have seen</h3>
+  <div class="tblwrap"><table>
+    <tr><th>Label here</th><th>What it is</th><th>Earlier names</th></tr>
+    <tr><td><span class="chip c-gflog">GF (log)</span> <span class="chip c-gfnat">GF (nat)</span></td><td>Growth-function fits (<code>nls</code>), best of four standard curves chosen by AIC; on the log or the natural scale</td><td>“Paine” (after Paine et al. 2012)</td></tr>
+    <tr><td><span class="chip c-spl">SPL</span></td><td>ASReml-R cubic smoothing spline</td><td>ASReml smoothing spline</td></tr>
+    <tr><td><span class="chip c-gp">GP</span></td><td>Gaussian process, Matérn 5/2, no mean function</td><td>V0</td></tr>
+    <tr><td><span class="chip c-gpl">GP+L</span></td><td>The same Gaussian process, with a logistic mean function</td><td>M-J</td></tr>
+  </table></div>
+
+  <h3>Reading the labels</h3>
+  <ul class="tight">
+    <li><b>Coverage</b> is the share of days on which a 95% band contains the true curve. Simulation targets 0.95; the left-out-readings intervals are 90%.</li>
+    <li><b>Failure count</b> sits beside every error. A fit that fails counts as a miss.</li>
+    <li>Every figure on a left-out-readings result carries the label in the box below.</li>
+  </ul>
+  <div class="holdout"><b>Label for every left-out-readings result.</b> One genotype (Arabidopsis C24, moving plants). GP = frozen, simulation settings, no mean function. Scored on left-out readings only; readings from one plant are not independent.</div>
+</section>
+
+<!-- 2 INTRO ---------------------------------------------------------------->
+<section id="intro">
+  <h2><span class="sn">2</span>Why this matters</h2>
+  <div class="summary"><b class="lbl">In plain language</b>
+    Plant growth is measured repeatedly, but rarely often enough, and what we want from those readings is not the readings themselves. We want the curve, how fast it is rising, and how sure we are.
+  </div>
+
+  <h3>The problem</h3>
+  <p>High-throughput phenotyping and field trials produce repeated measures of size over time: rosette area, canopy height, NDVI. Breeders and physiologists use them to ask when a genotype grows fastest, how quickly it grows relative to its size, and whether two genotypes differ. Those questions are about <em>rates</em>, not sizes: the absolute growth rate (AGR, the change in size per day) and the relative growth rate (RGR, the change per unit of size per day).</p>
+  <p>Rates are harder to estimate than sizes. A small error in a curve can become a large error in its slope, and the uncertainty has to be carried through that step correctly. The problem is worse when plants are measured only a few times, when some genotypes are measured much more often than others, or when one reading goes wrong.</p>
+
+  <h3>Two families of method</h3>
+  <p><b>Growth functions</b> assume the curve has a known shape (logistic, Gompertz, monomolecular) with a few interpretable parameters. They are compact and can work with very few readings, but are only as good as the shape assumed. <b>Flexible statistical models</b> (smoothing splines and Gaussian processes) let the data draw the shape. They can follow curves that no standard function matches, but they lean harder on the data, and on their own priors when data are thin.</p>
+  <p>Our longer-term aim is to bring such methods into ASReml-R mixed models of field and controlled-environment growth. Before that, we need to know how each behaves on its own, which is what this report tests.</p>
+
+  <h3>What we asked</h3>
+  <ul class="tight">
+    <li><b>Sharp:</b> how narrow are the bands, and how close is the estimated curve to the truth?</li>
+    <li><b>Honest:</b> do 95% bands contain the truth about 95% of the time?</li>
+    <li><b>Robust:</b> what happens as readings are removed, or when an early reading is a spike?</li>
+  </ul>
+  <p>We used simulated plants, where the true curve is known, and real Arabidopsis data, where it is not.</p>
+</section>
+
+<!-- 3 APPROACHES ----------------------------------------------------------->
+<section id="approaches">
+  <h2><span class="sn">3</span>The four approaches</h2>
+  <div class="summary"><b class="lbl">In plain language</b>
+    Each method fits a curve and then builds an uncertainty band in its own way. Knowing how the band is made is the key to reading the results.
+  </div>
+
+  <h3><span class="chip c-gflog">GF</span> Growth functions</h3>
+  <p><code>paine_fit_all()</code> fits four curves by <code>nls</code>: monomolecular (<code>SSasymp</code>), three-parameter logistic (<code>SSlogis</code>), four-parameter logistic (<code>SSfpl</code>) and Gompertz (<code>SSgompertz</code>). The model is chosen by AIC within a scale (natural or log). Intervals come from multivariate-normal draws of the parameters using the scaled <code>vcov()</code>. The left-out-readings arms use <code>variance = "none"</code>. An extra arm, <code>natural_improved</code> (<code>varPower</code>, <code>gnls</code>), is reported separately and is not part of the main comparison.</p>
+
+  <h3><span class="chip c-spl">SPL</span> ASReml smoothing spline</h3>
+  <p>ASReml-R cubic smoothing spline: <code>resp ~ day</code> with random <code>spl(day)</code>, fitted by REML. Slopes come from finite differences (h = 0.05 days) on the predictions and their covariance, and bands from multivariate-normal draws of the prediction covariance. On the log scale RGR is the slope and AGR is size × RGR. ASReml was run on one thread.</p>
+
+  <h3><span class="chip c-gp">GP</span> Gaussian process</h3>
+  <p>A marginal-likelihood Gaussian process (<code>fit_gp_marginal</code>, Stan model <code>gp_marginal_matern52_deriv.stan</code>) with a Matérn 5/2 kernel, fitted on the log scale with constant residual standard deviation. RGR is the derivative f′ and AGR is exp(f) f′, both from joint posterior draws. A fit is flagged if divergences or treedepth hits reach 1% of draws, max R-hat exceeds 1.01, or minimum bulk ESS falls below 400.</p>
+  <details><summary>Priors and software</summary>
+    <ul class="tight">
+      <li>length-scale ~ inverse-gamma(2.789147, 16.092788)</li>
+      <li>GP standard deviation ~ half Student-t(3, 0, sd_scale)</li>
+      <li>slope b ~ normal(0, b_scale); intercept ~ Student-t(3, ly_med, sd_scale); sigma ~ half-normal(0, 1)</li>
+      <li>rstan 2.32.7, R 4.5.2 <span class="verify">confirm against sessionInfo</span></li>
+    </ul>
+  </details>
+
+  <h3><span class="chip c-gpl">GP+L</span> Gaussian process with a logistic mean</h3>
+  <p>The GP above with a logistic mean function, sampled with <code>adapt_delta = 0.99</code>. <span class="verify">Description to be checked against the M-J script before publishing; the poster session did not read that script.</span></p>
+
+  <h3>Why the log scale</h3>
+  <p>On the log scale RGR is simply the slope of the curve, and growth rates come from joint draws, which avoids dividing one uncertain number by another. We do not claim that the log scale <em>causes</em> any pattern in the coverage of the log growth-function arm; that was not isolated.</p>
+
+  <div class="slot"><span class="tag">Table slot</span>
+    <div class="cap">Software versions</div>
+    <div class="src">{{tbl_session_info}} ← sessionInfo export</div>
+  </div>
+  <p><b>References.</b> <ol class="tight"><li>{.references}
+
+Paine CET et al. (2012) Methods Ecol Evol 3:245-256. <a href="https://doi.org/10.1111/j.2041-210X.2011.00155.x">doi:10.1111/j.2041-210X.2011.00155.x</a></li><li>Carpenter B et al. (2017) Stan. J Stat Softw 76(1). <a href="https://doi.org/10.18637/jss.v076.i01">doi:10.18637/jss.v076.i01</a></li><li>Stan Development Team (2025) RStan 2.32.7. mc-stan.org</li><li>Rasmussen CE, Williams CKI (2006) Gaussian Processes for Machine Learning. MIT Press</li><li>Verbyla AP et al. (1999) J R Stat Soc C 48:269-311. <a href="https://doi.org/10.1111/1467-9876.00154">doi:10.1111/1467-9876.00154</a></li><li>Butler DG et al. (2023) ASReml-R Reference Manual 4.2. VSN International</li><li>Junker A et al. (2015) Front Plant Sci 5:770. <a href="https://doi.org/10.3389/fpls.2014.00770">doi:10.3389/fpls.2014.00770</a></li></ol> <span class="verify">Poster has seven; Vehtari et al. 2021 (R-hat) is a candidate to add.</span></p>
+</section>
+
+<!-- 4 DATA ----------------------------------------------------------------->
+<section id="data">
+  <h2><span class="sn">4</span>The data</h2>
+  <div class="summary"><b class="lbl">In plain language</b>
+    Arabidopsis is the main real test. The wheat and maize data are described here but not analysed.
+  </div>
+
+  <h3>Arabidopsis C24 (rosette area)</h3>
+  <p>One genotype (C24), days 1 to 44, from Junker et al. (2015; e!DAL record 1135FA_analysis.xlsx, CC BY 4.0). Plants were separated into <em>moving</em> and <em>stationary</em> groups from the sampling-density pattern. <span class="verify">project notes say this matches the paper’s 384/100 split before cleaning; not checked against a file here</span></p>
+  <div class="tblwrap"><table><caption style="text-align:left;font-weight:600;padding:.3rem 0">Plants and readings in the valid set (<code>arabidopsis_rosette_area_valid.rds</code>)</caption><tr><th>Group</th><th class="num">Plants</th><th class="num">Readings</th><th class="num">Readings per plant</th></tr><tr><td>moving</td><td class="num">331</td><td class="num">5242</td><td class="num">14 to 19 (median 15)</td></tr><tr><td>stationary</td><td class="num">94</td><td class="num">303</td><td class="num">2 to 6 (median 3)</td></tr><tr class="rule"><td><b>all</b></td><td class="num"><b>425</b></td><td class="num"><b>5545</b></td><td></td></tr></table></div>
+  <div class="slot"><span class="tag">Table slot</span>
+    <div class="cap">Cleaning stages and plant counts</div>
+    <div class="src">{{tbl_arab_cleaning}} ← README_arabidopsis_status.txt, count tables</div>
+    <div class="need">Needs: counts at each cleaning stage, moving versus stationary.</div>
+  </div>
+
+  <h3>Wheat (FIP, ETH Zürich)</h3>
+  <p>Canopy height from six year-lots. Genotypes show a real imbalance, with checks measured far more often than test lines. The lodging cut points are not finalised, so the wheat data are <b>described only</b>.</p>
+  <div class="slot"><span class="tag">Table slot</span><div class="cap">Wheat description</div><div class="src">{{tbl_wheat_desc}} ← README_height_data_status.txt</div></div>
+
+  <h3>Maize NDVI panel</h3>
+  <p>Five time points per genotype with a published P-spline benchmark: a deliberately sparse case. <b>Described only.</b></p>
+  <div class="slot"><span class="tag">Table slot</span><div class="cap">Maize description</div><div class="src">{{tbl_maize_desc}} ← count tables</div></div>
+</section>
+
+<!-- 5 METHODS -------------------------------------------------------------->
+<section id="methods">
+  <h2><span class="sn">5</span>Methods</h2>
+  <div class="summary"><b class="lbl">In plain language</b>
+    How we scored the methods, and the rules we applied so that no method gains by failing or by being judged on easy cases.
+  </div>
+
+  <h3>Simulation design</h3>
+  <ul class="tight">
+    <li>25 scenarios × 50 simulated plants per scenario.</li>
+    <li>Test half uses replicates 121 to 130.</li>
+    <li>Sampling designs: dense, thin7, thin5, thin4 (readings per plant).</li>
+    <li>Truth is a known, noise-free curve; bands are for that mean curve and its growth rates, not for a new reading.</li>
+  </ul>
+  <div class="simnote"><b>Read with every simulation result.</b> Simulated truths are very smooth, so a smoothing method doing well is not evidence for real data. The simulated logistic is a logistic plus 5 mm². Spikes hit only the earliest reading.</div>
+
+  <h3>Scoring rules</h3>
+  <ul class="tight">
+    <li><b>Coverage</b> is the mean, over datasets, of the share of days whose band contains the truth. A failed fit counts as a total miss, so no method gains by failing.</li>
+    <li><b>Accuracy and band width</b> are computed on fits that worked and always shown beside the failure count.</li>
+    <li>Arms are compared only on scenarios every arm has, and paired by dataset (every method sees the same data).</li>
+    <li>Monte Carlo error is reported; differences under about twice the standard error are not read.</li>
+    <li>Coverage near 1 with very wide bands is not good calibration, so coverage is read next to width.</li>
+  </ul>
+
+  <h3>Left-out readings (Arabidopsis)</h3>
+  <ul class="tight">
+    <li><b>H1</b> hides the last reading, <b>H2</b> the last two, <b>H3</b> everything after day 30.</li>
+    <li>Intervals are 90%. Failed fits count as misses.</li>
+    <li>Two trivial baselines are included for scale, including “repeat the last reading”.</li>
+    <li>Where the cut falls relative to the plateau changes the ranking, so results are shown for each cut.</li>
+  </ul>
+  <div class="holdout"><b>Label.</b> One genotype (Arabidopsis C24, moving plants). GP = frozen, simulation settings, no mean function. Scored on left-out readings only; readings from one plant are not independent.</div>
+</section>
+
+<!-- 6 SIMULATION ----------------------------------------------------------->
+<section id="simulation">
+  <h2><span class="sn">6</span>Simulation tests</h2>
+  <div class="summary"><b class="lbl">In plain language</b>
+    As readings get fewer, GP+L and GP keep covering the true size curve (coverage 1.00 and 1.00 on the thinnest design, thin4) but only with very wide bands: 114% and 374% of the plateau size K. Coverage near 1 with bands that wide says little. GF (log) keeps narrower bands (14% of K) but its coverage falls to 0.61 (49 of 50 fits). On the older grid, SPL (log) had no fit for 259 of 500 datasets at thin4. Thinner data cost coverage or width; no arm avoids both.
+  </div>
+  <div class="simnote"><b>Remember:</b> smooth simulated truths; logistic + 5 mm²; spikes on the earliest reading only.</div>
+
+  <h3>Coverage and band width</h3>
+  <figure class="fig"><img src="figs/fig1_sim.svg" alt="Coverage and band width of the size band by sampling design, five arms"><figcaption><b>Figure 1.</b> Simulation only. Coverage (left) and median band width (right) of the 95% band for the true size curve, by sampling design. GP+L and GP: <code>mm3_fits_all.csv</code> (clean, test half, same datasets). GF: refit on GP+L’s datasets (paired). SPL (log), dashed and hollow: the older grid, other replicates, unpaired; failed fits there: dense 6%, thin7 38%, thin5 46%, thin4 52%. Failed fits count as misses in coverage. Simulated truths are very smooth.</figcaption></figure>
+  <div class="tblwrap"><table><caption style="text-align:left;font-weight:600;padding:.3rem 0">Coverage of the 95% band for the true size curve; beneath it the median band width (% of the plateau size K) and the number of datasets with no fit</caption><tr><th>Arm</th><th class="num">dense<span class="sub">14 readings</span></th><th class="num">thin7<span class="sub">7 readings</span></th><th class="num">thin5<span class="sub">5 readings</span></th><th class="num">thin4<span class="sub">4 readings</span></th><th class="num">sparse<span class="sub">3 readings</span></th></tr><tr><td><span class="chip c-gpl">GP+L</span><span class='sub'>mm3_fits_all</span></td><td class="num"><b>0.95</b><span class="sub">15% of K<br><span class="">0 of 90 failed</span></span></td><td class="num"><b>0.97</b><span class="sub">38% of K<br><span class="">0 of 50 failed</span></span></td><td class="num"><b>1.00</b><span class="sub">69% of K<br><span class="">0 of 50 failed</span></span></td><td class="num"><b>1.00</b><span class="sub">114% of K<br><span class="">0 of 50 failed</span></span></td><td class="num"><b>1.00</b><span class="sub">142% of K<br><span class="">0 of 10 failed</span></span></td></tr><tr><td><span class="chip c-gp">GP</span><span class='sub'>mm3_fits_all</span></td><td class="num"><b>0.95</b><span class="sub">15% of K<br><span class="">0 of 90 failed</span></span></td><td class="num"><b>0.99</b><span class="sub">73% of K<br><span class="">0 of 50 failed</span></span></td><td class="num"><b>1.00</b><span class="sub">215% of K<br><span class="">0 of 50 failed</span></span></td><td class="num"><b>1.00</b><span class="sub">374% of K<br><span class="">0 of 50 failed</span></span></td><td class="num"><b>1.00</b><span class="sub">1669% of K<br><span class="">0 of 10 failed</span></span></td></tr><tr><td><span class="chip c-gflog">GF (log)</span><span class='sub'>P1 and P2 (paired)</span></td><td class="num"><b>0.84</b><span class="sub">11% of K<br><span class="">0 of 50 failed</span></span></td><td class="num"><b>0.85</b><span class="sub">15% of K<br><span class="">0 of 50 failed</span></span></td><td class="num"><b>0.80</b><span class="sub">18% of K<br><span class="">0 of 50 failed</span></span></td><td class="num"><b>0.61</b><span class="sub">14% of K<br><span class="cellfail">1 of 50 failed</span></span></td><td class="num"><b>0.00</b><span class="sub cellfail">no fit worked (0 of 10)</span></td></tr><tr><td><span class="chip c-gfnat">GF (nat)</span><span class='sub'>P1 and P2 (paired)</span></td><td class="num"><b>0.65</b><span class="sub">3% of K<br><span class="">0 of 50 failed</span></span></td><td class="num"><b>0.55</b><span class="sub">2% of K<br><span class="cellfail">1 of 50 failed</span></span></td><td class="num"><b>0.37</b><span class="sub">1% of K<br><span class="cellfail">3 of 50 failed</span></span></td><td class="num"><b>0.25</b><span class="sub">1% of K<br><span class="cellfail">2 of 50 failed</span></span></td><td class="num"><b>0.00</b><span class="sub cellfail">no fit worked (0 of 10)</span></td></tr><tr><td><span class="chip c-spl">SPL (log)</span><span class='sub'>G1 and G2 (other replicates)</span></td><td class="num"><b>0.84</b><span class="sub">9% of K<br><span class="cellfail">28 of 500 failed</span></span></td><td class="num"><b>0.45</b><span class="sub">12% of K<br><span class="cellfail">191 of 500 failed</span></span></td><td class="num"><b>0.30</b><span class="sub">14% of K<br><span class="cellfail">229 of 500 failed</span></span></td><td class="num"><b>0.29</b><span class="sub">24% of K<br><span class="cellfail">259 of 500 failed</span></span></td><td class="num"><b>0.00</b><span class="sub cellfail">no fit worked (0 of 100)</span></td></tr></table></div><p class="figcap">Coverage counts a failed fit as a miss. Width is among fits that worked. GP+L and GP: 50 datasets per thinned design and 90 at dense, 10 at sparse (the <em>n</em> is in each cell: failed of datasets). GF: refit on GP+L’s datasets, so paired (50 per design, 10 at sparse). SPL (log): the older grid, other replicates, unpaired (500 per design, 100 at sparse). Differences between cells smaller than about twice the Monte Carlo error should not be read. Simulated truths are very smooth.</p>
+
+  <h3>Paired comparison with GF</h3>
+  <div class="slot"><span class="tag">Figure slot</span><div class="cap">Dataset-by-dataset differences, with Monte Carlo error</div>
+    <div class="src">{{fig_paired_gf}} ← mm3_fits_all</div></div>
+
+  <h3>Spike robustness and the SC1 rule</h3>
+  <div class="slot"><span class="tag">Figure slot</span><div class="cap">Effect of an early spike (P1 to P5; SC1 d1 to d3)</div>
+    <div class="src">{{fig_spike}} ← A3 refit and P1–P5 source CSVs; SC1 d1–d3</div></div>
+
+  <h3>Step 3 declared verdicts</h3>
+  <p>Verdicts declared before the runs are kept on record here, stated as what was declared and what was observed, without pass or fail wording.</p>
+  <div class="slot"><span class="tag">Table slot</span><div class="cap">Declared criteria and observed values</div>
+    <div class="src">{{tbl_step3}} ← Step 3 tables</div></div>
+</section>
+
+<!-- 7 ARAB DESC ------------------------------------------------------------>
+<section id="arab-desc">
+  <h2><span class="sn">7</span>Arabidopsis, description</h2>
+  <div class="summary"><b class="lbl">In plain language</b>
+    What the four methods look like on real moving plants. This page describes; it does not score accuracy.
+  </div>
+  <p>Description only. There is no accuracy or error language on this page, because the true curve of a real plant is unknown. The only scored real-data test is the left-out readings in the next section.</p>
+  <figure class="fig"><img src="figs/fig4_plant1003.svg" alt="One plant, four tools: size and growth rate"><figcaption><b>Figure 4.</b> One plant (Arabidopsis C24, full data; plant 1135FA1003). Illustration of how the tools differ, not a comparison of accuracy. Curves are tool medians for whole days 4 to 44 with their bands (the Day 1 to 3 extrapolation is left out); dots are the plant’s readings. Growth-rate bands that run off the top of a panel are cut off by the axis. Source: <code>abstract_1003_curves.csv</code>, <code>arabidopsis_rosette_area_valid.rds</code>.</figcaption></figure>
+  <div class="slot"><span class="tag">Table slot</span><div class="cap">Moving plants: counts and flag rates</div>
+    <div class="src">{{tbl_arab_flags}} ← A2 set and diagnostic tables</div></div>
+  <div class="slot"><span class="tag">Figure slot</span><div class="cap">Fit against the day 44 reading; K and r descriptors</div>
+    <div class="src">{{fig_arab_desc}} ← A2 set; poster F4b</div></div>
+  <div class="slot"><span class="tag">Figure slot</span><div class="cap">The plants with two modes</div>
+    <div class="src">{{fig_two_mode}} ← A2 diagnostic tables</div></div>
+</section>
+
+<!-- 8 ARAB LEFT OUT -------------------------------------------------------->
+<section id="arab-left">
+  <h2><span class="sn">8</span>Arabidopsis, left-out readings</h2>
+  <div class="summary"><b class="lbl">In plain language</b>
+    Which tool is closest on left-out readings depends on how far past the last reading we predict. With the last reading left out, simply repeating it (0.059) is about as close as GP+L (0.062). For Days 36 to 44 after a Day 30 cut the errors separate: GF (log) 0.59 (14 of 802 readings with no fit), GP+L 0.68, SPL (log) 2.34 (30 of 802 with no fit) and GP 2.49. At the longest horizon, 99% of left-out readings fall inside the GP+L 90% interval, 88% for GF (log), 85% for GP (the widest bands) and 54% for SPL (log).
+  </div>
+  <div class="holdout"><b>Label.</b> One genotype (Arabidopsis C24, moving plants). GP = frozen, simulation settings, no mean function. Scored on left-out readings only; readings from one plant are not independent.</div>
+
+  <h3 style="margin-top:1.2rem">H1: last reading left out</h3><div class="tblwrap"><table><tr><th>Arm</th><th class="num">Median absolute log error</th><th class="num">Readings with no fit</th><th class="num">Inside 90% interval</th><th class="num">Width ln(upper / lower)</th></tr><tr><td><span class="chip c-gpl">GP+L</span></td><td class="num">0.062<span class="sub">0.055 to 0.072</span></td><td class="num">0 of 327<span class="sub">327 plants scored</span></td><td class="num">100%</td><td class="num">1.93</td></tr><tr><td><span class="chip c-gp">GP</span></td><td class="num">1.154<span class="sub">0.530 to 1.356</span></td><td class="num">0 of 327<span class="sub">327 plants scored</span></td><td class="num">97%</td><td class="num">3.05</td></tr><tr><td><span class="chip c-gflog">GF (log)</span></td><td class="num">0.151<span class="sub">0.126 to 0.169</span></td><td class="num">0 of 327<span class="sub">327 plants scored</span></td><td class="num">93%</td><td class="num">1.44</td></tr><tr><td><span class="chip c-gfnat">GF (nat)</span></td><td class="num">0.089<span class="sub">0.075 to 0.103</span></td><td class="num">3 of 327 <span class="cellfail">●</span><span class="sub">324 plants scored</span></td><td class="num">36%</td><td class="num">0.11</td></tr><tr><td><span class="chip c-spl">SPL (log)</span></td><td class="num">0.437<span class="sub">0.220 to 0.564</span></td><td class="num">8 of 327 <span class="cellfail">●</span><span class="sub">319 plants scored</span></td><td class="num">85%</td><td class="num">2.14</td></tr><tr><td><span class="chip c-spl">SPL (nat)</span></td><td class="num">0.134<span class="sub">0.106 to 0.168</span></td><td class="num">90 of 327 <span class="cellfail">●</span><span class="sub">237 plants scored</span></td><td class="num">6%</td><td class="num">0.02</td></tr><tr class="rule"><td>Repeat last reading</td><td class="num">0.059<span class="sub">0.052 to 0.065</span></td><td class="num">0 of 327<span class="sub">327 plants scored</span></td><td class="num">–</td><td class="num">–</td></tr><tr><td>Log-linear baseline</td><td class="num">0.156<span class="sub">0.117 to 0.211</span></td><td class="num">0 of 327<span class="sub">327 plants scored</span></td><td class="num">–</td><td class="num">–</td></tr><tr class="extra"><td>GF (nat), improved (EXTRA)</td><td class="num">0.088<span class="sub">0.076 to 0.112</span></td><td class="num">7 of 327 <span class="cellfail">●</span><span class="sub">320 plants scored</span></td><td class="num">56%</td><td class="num">0.19</td></tr></table></div><h3 style="margin-top:1.2rem">H2: last two readings left out</h3><div class="tblwrap"><table><tr><th>Arm</th><th class="num">Median absolute log error</th><th class="num">Readings with no fit</th><th class="num">Inside 90% interval</th><th class="num">Width ln(upper / lower)</th></tr><tr><td><span class="chip c-gpl">GP+L</span></td><td class="num">0.089<span class="sub">0.081 to 0.102</span></td><td class="num">0 of 658<span class="sub">329 plants scored</span></td><td class="num">100%</td><td class="num">2.38</td></tr><tr><td><span class="chip c-gp">GP</span></td><td class="num">1.371<span class="sub">1.291 to 1.436</span></td><td class="num">0 of 658<span class="sub">329 plants scored</span></td><td class="num">93%</td><td class="num">3.73</td></tr><tr><td><span class="chip c-gflog">GF (log)</span></td><td class="num">0.219<span class="sub">0.191 to 0.240</span></td><td class="num">0 of 658<span class="sub">329 plants scored</span></td><td class="num">93%</td><td class="num">1.59</td></tr><tr><td><span class="chip c-gfnat">GF (nat)</span></td><td class="num">0.126<span class="sub">0.110 to 0.144</span></td><td class="num">10 of 658 <span class="cellfail">●</span><span class="sub">324 plants scored</span></td><td class="num">34%</td><td class="num">0.10</td></tr><tr><td><span class="chip c-spl">SPL (log)</span></td><td class="num">0.660<span class="sub">0.626 to 0.709</span></td><td class="num">16 of 658 <span class="cellfail">●</span><span class="sub">321 plants scored</span></td><td class="num">81%</td><td class="num">2.51</td></tr><tr><td><span class="chip c-spl">SPL (nat)</span></td><td class="num">0.224<span class="sub">0.209 to 0.246</span></td><td class="num">180 of 658 <span class="cellfail">●</span><span class="sub">239 plants scored</span></td><td class="num">10%</td><td class="num">0.06</td></tr><tr class="rule"><td>Repeat last reading</td><td class="num">0.097<span class="sub">0.087 to 0.105</span></td><td class="num">0 of 658<span class="sub">329 plants scored</span></td><td class="num">–</td><td class="num">–</td></tr><tr><td>Log-linear baseline</td><td class="num">0.339<span class="sub">0.322 to 0.359</span></td><td class="num">0 of 658<span class="sub">329 plants scored</span></td><td class="num">–</td><td class="num">–</td></tr><tr class="extra"><td>GF (nat), improved (EXTRA)</td><td class="num">0.123<span class="sub">0.106 to 0.144</span></td><td class="num">20 of 658 <span class="cellfail">●</span><span class="sub">319 plants scored</span></td><td class="num">50%</td><td class="num">0.16</td></tr></table></div><h3 style="margin-top:1.2rem">H3: everything after Day 30 left out</h3><div class="tblwrap"><table><tr><th>Arm</th><th class="num">Median absolute log error</th><th class="num">Readings with no fit</th><th class="num">Inside 90% interval</th><th class="num">Width ln(upper / lower)</th></tr><tr><td><span class="chip c-gpl">GP+L</span></td><td class="num">0.620<span class="sub">0.600 to 0.666</span></td><td class="num">0 of 1460<span class="sub">329 plants scored</span></td><td class="num">99%</td><td class="num">3.20</td></tr><tr><td><span class="chip c-gp">GP</span></td><td class="num">1.136<span class="sub">1.059 to 1.212</span></td><td class="num">0 of 1460<span class="sub">329 plants scored</span></td><td class="num">85%</td><td class="num">4.53</td></tr><tr><td><span class="chip c-gflog">GF (log)</span></td><td class="num">0.505<span class="sub">0.452 to 0.551</span></td><td class="num">24 of 1460 <span class="cellfail">●</span><span class="sub">324 plants scored</span></td><td class="num">88%</td><td class="num">2.30</td></tr><tr><td><span class="chip c-gfnat">GF (nat)</span></td><td class="num">0.278<span class="sub">0.225 to 0.314</span></td><td class="num">139 of 1460 <span class="cellfail">●</span><span class="sub">298 plants scored</span></td><td class="num">43%</td><td class="num">0.37</td></tr><tr><td><span class="chip c-spl">SPL (log)</span></td><td class="num">1.100<span class="sub">1.067 to 1.161</span></td><td class="num">54 of 1460 <span class="cellfail">●</span><span class="sub">317 plants scored</span></td><td class="num">54%</td><td class="num">2.54</td></tr><tr><td><span class="chip c-spl">SPL (nat)</span></td><td class="num">0.181<span class="sub">0.161 to 0.197</span></td><td class="num">337 of 1460 <span class="cellfail">●</span><span class="sub">247 plants scored</span></td><td class="num">8%</td><td class="num">0.08</td></tr><tr class="rule"><td>Repeat last reading</td><td class="num">0.756<span class="sub">0.732 to 0.778</span></td><td class="num">0 of 1460<span class="sub">329 plants scored</span></td><td class="num">–</td><td class="num">–</td></tr><tr><td>Log-linear baseline</td><td class="num">0.729<span class="sub">0.668 to 0.768</span></td><td class="num">0 of 1460<span class="sub">329 plants scored</span></td><td class="num">–</td><td class="num">–</td></tr><tr class="extra"><td>GF (nat), improved (EXTRA)</td><td class="num">0.255<span class="sub">0.208 to 0.304</span></td><td class="num">301 of 1460 <span class="cellfail">●</span><span class="sub">260 plants scored</span></td><td class="num">42%</td><td class="num">0.45</td></tr></table></div><p class="figcap">Failed readings and the plants scored are different counts and are kept apart: “no fit” counts left-out readings; the line beneath counts plants that were scored. The pale rows are baselines (no interval) and the EXTRA arm, which is reported only and is not part of the main comparison. The two numbers under each error are the <em>lo</em> and <em>hi</em> columns of F1a_error_each_tool.csv, as drawn in the poster’s figure. <span class="verify">file does not say what interval these are; confirm before publishing</span></p>
+  <figure class="fig"><img src="figs/fig2_horizon.svg" alt="Median absolute log error by day after the cut"><figcaption><b>Figure 2.</b> One genotype (Arabidopsis C24, moving plants). GP = frozen, simulation settings, no mean function. Scored on left-out readings only; readings from one plant are not independent. Bars are the lo and hi columns of the file. Failed readings (Day 31/34/36 to 44, H3): SPL (log) 12/12/30; GF (log) 5/5/14 of 329/329/802.</figcaption></figure><div class="tblwrap"><table><caption style="text-align:left;font-weight:600;padding:.3rem 0">H3 error by day after the cut, median absolute log error (per-plant median, paired readings)</caption><tr><th>Arm</th><th class="num">Day 31</th><th class="num">Day 34</th><th class="num">Days 36 to 44</th></tr><tr><td><span class="chip c-gp">GP</span></td><td class="num">0.42<span class="sub">0 of 329 no fit</span></td><td class="num">0.89<span class="sub">0 of 329 no fit</span></td><td class="num">2.49<span class="sub">0 of 802 no fit</span></td></tr><tr><td><span class="chip c-gpl">GP+L</span></td><td class="num">0.39<span class="sub">0 of 329 no fit</span></td><td class="num">0.59<span class="sub">0 of 329 no fit</span></td><td class="num">0.68<span class="sub">0 of 802 no fit</span></td></tr><tr><td><span class="chip c-gflog">GF (log)</span></td><td class="num">0.39<span class="sub">5 of 329 no fit</span></td><td class="num">0.46<span class="sub">5 of 329 no fit</span></td><td class="num">0.59<span class="sub">14 of 802 no fit</span></td></tr><tr><td><span class="chip c-spl">SPL (log)</span></td><td class="num">0.44<span class="sub">12 of 329 no fit</span></td><td class="num">0.86<span class="sub">12 of 329 no fit</span></td><td class="num">2.34<span class="sub">30 of 802 no fit</span></td></tr><tr><td>Repeat last reading</td><td class="num">0.51<span class="sub">0 of 329 no fit</span></td><td class="num">0.71<span class="sub">0 of 329 no fit</span></td><td class="num">0.81<span class="sub">0 of 802 no fit</span></td></tr><tr><td>Log-linear baseline</td><td class="num">0.22<span class="sub">0 of 329 no fit</span></td><td class="num">0.53<span class="sub">0 of 329 no fit</span></td><td class="num">1.72<span class="sub">0 of 802 no fit</span></td></tr></table></div><figure class="fig"><img src="figs/fig3_calibration.svg" alt="Share of left-out readings inside the 90% interval against interval width"><figcaption><b>Figure 3.</b> One genotype (Arabidopsis C24, moving plants). GP = frozen, simulation settings, no mean function. Scored on left-out readings only; readings from one plant are not independent. Points run H1, H2, H3 (longer gap). Failed fits count as misses. Failed readings (H1/H2/H3): SPL (log) 8/16/54; SPL (nat) 90/180/337; GF (nat) 3/10/139; GF (nat), improved (EXTRA) 7/20/301 of 327/658/1460 left-out readings. Plain natural-scale arms and the EXTRA arm are drawn faint.</figcaption></figure>
+
+  <h3>Near the plateau</h3>
+  <p>Close to the plateau, the trivial baseline “repeat the last reading” is about as close as GP+L: 0.059 against 0.062 at H1 and 0.097 against 0.089 at H2 (median absolute log error). Plain natural-scale arms have far-too-narrow intervals (inside the 90% interval at H3: GF (nat) 43%, SPL (nat) 8%), and SPL (nat) has no fit for 337 of 1460 readings at H3.</p>
+
+  <h3>Extra arm: <code>natural_improved</code> (report only)</h3>
+  <p>Reported for completeness and not part of the main comparison. Failed <em>plants</em> and failed <em>readings</em> are different counts and are kept separate here.</p>
+  <div class="slot"><span class="tag">Table slot</span><div class="cap">natural_improved arm, with erratum text carried</div>
+    <div class="src">{{tbl_improved}} ← A3 and spline reports</div></div>
+</section>
+
+<!-- 9 LIMITS --------------------------------------------------------------->
+<section id="limits">
+  <h2><span class="sn">9</span>Limits and open questions</h2>
+  <div class="summary"><b class="lbl">In plain language</b>
+    What this work cannot say, and what we have not yet explained.
+  </div>
+  <ul class="tight">
+    <li>Simulated truths are very smooth; real curves can be rougher.</li>
+    <li>The real-data test is one genotype, and readings from one plant are not independent.</li>
+    <li>Rankings depend on where the cut falls relative to the plateau.</li>
+    <li>The cause of the log-scale growth-function coverage was not isolated.</li>
+    <li>The wheat M-J look has not been run (it needs the lodging cut-point list).</li>
+  </ul>
+  <div class="slot"><span class="tag">Table slot</span><div class="cap">Risk table, unexplained items, retractions that bear on wording</div>
+    <div class="src">{{tbl_limits}} ← controller state file, section 7</div></div>
+</section>
+
+<!-- 10 NEXT ---------------------------------------------------------------->
+<section id="next">
+  <h2><span class="sn">10</span>What comes next</h2>
+  <ul class="tight">
+    <li>Hierarchical borrowing between densely and sparsely measured members of a population.</li>
+    <li>Genetic relatedness and spatial information in the curves.</li>
+    <li>A GP+L variant with a prior on the plateau (K), to be tested in simulation first.</li>
+  </ul>
+</section>
+
+<!-- 11 SOURCES ------------------------------------------------------------->
+<section id="sources">
+  <h2><span class="sn">11</span>Sources</h2>
+  <div class="summary"><b class="lbl">How to check a number</b>
+    Every number on this page comes from a named saved file. The table lists each number, its file and the file's md5.
+  </div>
+  <h3>Numbers printed in the text</h3><div class="tblwrap"><table class="src"><tr><th>Token</th><th>Value</th><th>File</th><th>md5</th><th>How it was read</th></tr><tr><td class="m">arab_n_moving</td><td>331</td><td class="m">arabidopsis_rosette_area_valid.rds</td><td class="m">e57c1613c04f8f55dbfa31878407e914</td><td>number of distinct Plant ID, group moving</td></tr><tr><td class="m">c1_cov_ln</td><td>0.61</td><td class="m">P1_cov_y.csv</td><td class="m">aafe35406815f70907e1421697fb6a26</td><td>est, group thin4, arm log_nls (paired, on GP+L&#x27;s datasets)</td></tr><tr><td class="m">c1_cov_mj</td><td>1.00</td><td class="m">mm3_fits_all.csv</td><td class="m">e9b60f59293c29e14df9eb33e169bc0f</td><td>mean cov_y, variant MJ, clean, test half, design thin4 (n=50)</td></tr><tr><td class="m">c1_cov_v0</td><td>1.00</td><td class="m">mm3_fits_all.csv</td><td class="m">e9b60f59293c29e14df9eb33e169bc0f</td><td>mean cov_y, variant V0, clean, test half, design thin4 (n=50)</td></tr><tr><td class="m">c1_fail_sp</td><td>259 of 500</td><td class="m">G4_fail.csv</td><td class="m">fe9152b56051ed6bbc895ca2cb37a220</td><td>lab, thin4, log_spline (older grid, other replicates)</td></tr><tr><td class="m">c1_lab_ln</td><td>49 of 50</td><td class="m">P1_cov_y.csv</td><td class="m">aafe35406815f70907e1421697fb6a26</td><td>lab (first part: fits that worked / datasets), thin4, log_nls</td></tr><tr><td class="m">c1_w_mj</td><td>114</td><td class="m">mm3_fits_all.csv</td><td class="m">e9b60f59293c29e14df9eb33e169bc0f</td><td>median w_y (% of K), variant MJ, clean, test half, thin4</td></tr><tr><td class="m">c1_w_v0</td><td>374</td><td class="m">mm3_fits_all.csv</td><td class="m">e9b60f59293c29e14df9eb33e169bc0f</td><td>median w_y (% of K), variant V0, clean, test half, thin4</td></tr><tr><td class="m">c1_wp_ln</td><td>14</td><td class="m">P2_w_y.csv</td><td class="m">3e360c53a7d6b4973a6c67c4763275bc</td><td>est (median band width, % of K), thin4, log_nls (paired)</td></tr><tr><td class="m">c2_carry_H1</td><td>0.059</td><td class="m">F1a_error_each_tool.csv</td><td class="m">1c02e1176a35441a0a1bc73fa7b98b7b</td><td>est, H1, carry</td></tr><tr><td class="m">c2_carry_H2</td><td>0.097</td><td class="m">F1a_error_each_tool.csv</td><td class="m">1c02e1176a35441a0a1bc73fa7b98b7b</td><td>est, H2, carry</td></tr><tr><td class="m">c2_f_ln</td><td>14 of 802</td><td class="m">F4b_H3_error_by_day_log_pairing.csv</td><td class="m">4601a010b935819b173aba975b448ea2</td><td>n_fail of n, Days 36-44, log_nls</td></tr><tr><td class="m">c2_f_sp</td><td>30 of 802</td><td class="m">F4b_H3_error_by_day_log_pairing.csv</td><td class="m">4601a010b935819b173aba975b448ea2</td><td>n_fail of n, Days 36-44, spline_log</td></tr><tr><td class="m">c2_ln_d36</td><td>0.59</td><td class="m">F4b_H3_error_by_day_log_pairing.csv</td><td class="m">4601a010b935819b173aba975b448ea2</td><td>est, Days 36-44, log_nls</td></tr><tr><td class="m">c2_mj_H1</td><td>0.062</td><td class="m">F1a_error_each_tool.csv</td><td class="m">1c02e1176a35441a0a1bc73fa7b98b7b</td><td>est, H1, MJ</td></tr><tr><td class="m">c2_mj_H2</td><td>0.089</td><td class="m">F1a_error_each_tool.csv</td><td class="m">1c02e1176a35441a0a1bc73fa7b98b7b</td><td>est, H2, MJ</td></tr><tr><td class="m">c2_mj_d36</td><td>0.68</td><td class="m">F4b_H3_error_by_day_log_pairing.csv</td><td class="m">4601a010b935819b173aba975b448ea2</td><td>est, Days 36-44, MJ</td></tr><tr><td class="m">c2_sp_d36</td><td>2.34</td><td class="m">F4b_H3_error_by_day_log_pairing.csv</td><td class="m">4601a010b935819b173aba975b448ea2</td><td>est, Days 36-44, spline_log</td></tr><tr><td class="m">c2_v0_d36</td><td>2.49</td><td class="m">F4b_H3_error_by_day_log_pairing.csv</td><td class="m">4601a010b935819b173aba975b448ea2</td><td>est, Days 36-44, V0</td></tr><tr><td class="m">c3_fail_sn</td><td>337 of 1460</td><td class="m">F3_inclusion_width.csv</td><td class="m">56a7d8e24608484223c2462f716da663</td><td>n_fail of n, H3, spline_natural</td></tr><tr><td class="m">c3_inc_ln</td><td>88%</td><td class="m">F3_inclusion_width.csv</td><td class="m">56a7d8e24608484223c2462f716da663</td><td>incl, H3, log_nls</td></tr><tr><td class="m">c3_inc_mj</td><td>99%</td><td class="m">F3_inclusion_width.csv</td><td class="m">56a7d8e24608484223c2462f716da663</td><td>incl, H3, MJ</td></tr><tr><td class="m">c3_inc_nn</td><td>43%</td><td class="m">F3_inclusion_width.csv</td><td class="m">56a7d8e24608484223c2462f716da663</td><td>incl, H3, natural_nls</td></tr><tr><td class="m">c3_inc_sn</td><td>8%</td><td class="m">F3_inclusion_width.csv</td><td class="m">56a7d8e24608484223c2462f716da663</td><td>incl, H3, spline_natural</td></tr><tr><td class="m">c3_inc_sp</td><td>54%</td><td class="m">F3_inclusion_width.csv</td><td class="m">56a7d8e24608484223c2462f716da663</td><td>incl, H3, spline_log</td></tr><tr><td class="m">c3_inc_v0</td><td>85%</td><td class="m">F3_inclusion_width.csv</td><td class="m">56a7d8e24608484223c2462f716da663</td><td>incl, H3, V0</td></tr></table></div><h3>Figures and tables</h3><div class="tblwrap"><table class="src"><tr><th>Item</th><th>Script</th><th>Inputs and what was taken</th><th>Input md5</th></tr><tr><td>Figure 1, Home</td><td class='m'>scripts/figures.py: fig_sim</td><td>mm3_fits_all.csv, P1_cov_y.csv, P2_w_y.csv, G1_cov_y.csv, G2_w_y.csv</td><td class='m'>mm3_fits_all.csv e9b60f59293c29e14df9eb33e169bc0f<br>P1_cov_y.csv aafe35406815f70907e1421697fb6a26<br>P2_w_y.csv 3e360c53a7d6b4973a6c67c4763275bc<br>G1_cov_y.csv 4c6cad37e7a47d45f14496535c031f51<br>G2_w_y.csv bcb908451727d1bf9d3c0bf4aee2fcff</td></tr><tr><td>Figure 2</td><td class='m'>scripts/figures.py: fig_horizon</td><td>F4b_H3_error_by_day_log_pairing.csv</td><td class='m'>F4b_H3_error_by_day_log_pairing.csv 4601a010b935819b173aba975b448ea2</td></tr><tr><td>Figure 3, Home</td><td class='m'>scripts/figures.py: fig_calib</td><td>F3_inclusion_width.csv</td><td class='m'>F3_inclusion_width.csv 56a7d8e24608484223c2462f716da663</td></tr><tr><td>Figure 4</td><td class='m'>scripts/figures.py: fig_plant</td><td>abstract_1003_curves.csv, arabidopsis_rosette_area_valid.rds</td><td class='m'>abstract_1003_curves.csv 47fd39f84a93085a19dc43b30457dba0<br>arabidopsis_rosette_area_valid.rds e57c1613c04f8f55dbfa31878407e914</td></tr><tr><td>Table, simulation</td><td class='m'>scripts/assemble.py: tbl_sim</td><td>mm3_fits_all.csv (mean cov_y, median w_y, count of ok), P1_cov_y.csv, P2_w_y.csv, G1_cov_y.csv, G2_w_y.csv (read as stored; lab gives fits that worked)</td><td class='m'>mm3_fits_all.csv e9b60f59293c29e14df9eb33e169bc0f<br>P1_cov_y.csv aafe35406815f70907e1421697fb6a26<br>P2_w_y.csv 3e360c53a7d6b4973a6c67c4763275bc<br>G1_cov_y.csv 4c6cad37e7a47d45f14496535c031f51<br>G2_w_y.csv bcb908451727d1bf9d3c0bf4aee2fcff</td></tr><tr><td>Tables, left-out readings</td><td class='m'>scripts/assemble.py: tbl_holdout, tbl_horizon</td><td>F1a_error_each_tool.csv, F3_inclusion_width.csv (n and n_fail checked equal), F4b_H3_error_by_day_log_pairing.csv</td><td class='m'>F1a_error_each_tool.csv 1c02e1176a35441a0a1bc73fa7b98b7b<br>F3_inclusion_width.csv 56a7d8e24608484223c2462f716da663<br>F4b_H3_error_by_day_log_pairing.csv 4601a010b935819b173aba975b448ea2</td></tr><tr><td>Table, Arabidopsis plants</td><td class='m'>scripts/assemble.py: blk_arab_valid</td><td>arabidopsis_rosette_area_valid.rds (counts of distinct Plant ID and rows by group)</td><td class='m'>arabidopsis_rosette_area_valid.rds e57c1613c04f8f55dbfa31878407e914</td></tr><tr><td>References</td><td class='m'>scripts/assemble.py: blk_references</td><td>poster.qmd (references block)</td><td class='m'>poster.qmd df855fdc6606b9cdb2e3637588b6e455</td></tr></table></div><h3>All input files</h3><div class="tblwrap"><table class="src"><tr><th>File (in <code>sources/</code>)</th><th>md5</th></tr><tr><td class="m">F1a_error_each_tool.csv</td><td class="m">1c02e1176a35441a0a1bc73fa7b98b7b</td></tr><tr><td class="m">F3_inclusion_width.csv</td><td class="m">56a7d8e24608484223c2462f716da663</td></tr><tr><td class="m">F4b_H3_error_by_day_log_pairing.csv</td><td class="m">4601a010b935819b173aba975b448ea2</td></tr><tr><td class="m">G1_cov_y.csv</td><td class="m">4c6cad37e7a47d45f14496535c031f51</td></tr><tr><td class="m">G2_w_y.csv</td><td class="m">bcb908451727d1bf9d3c0bf4aee2fcff</td></tr><tr><td class="m">G4_fail.csv</td><td class="m">fe9152b56051ed6bbc895ca2cb37a220</td></tr><tr><td class="m">P1_cov_y.csv</td><td class="m">aafe35406815f70907e1421697fb6a26</td></tr><tr><td class="m">P2_w_y.csv</td><td class="m">3e360c53a7d6b4973a6c67c4763275bc</td></tr><tr><td class="m">mm3_fits_all.csv</td><td class="m">e9b60f59293c29e14df9eb33e169bc0f</td></tr><tr><td class="m">abstract_1003_curves.csv</td><td class="m">47fd39f84a93085a19dc43b30457dba0</td></tr><tr><td class="m">abstract_1003_sources.txt</td><td class="m">412b6de95b83be2b31df3172e0b59555</td></tr><tr><td class="m">arabidopsis_rosette_area_valid.rds</td><td class="m">e57c1613c04f8f55dbfa31878407e914</td></tr></table></div><p>The same lists are in <a href="source_list.csv"><code>source_list.csv</code></a> and <a href="sources/MD5SUMS.txt"><code>sources/MD5SUMS.txt</code></a>. Every file above is a copy of a file the poster used, and each md5 was checked against the poster’s own list when it was copied.</p>
+  <p>Scripts and declarations: {{scripts_links}}. Frozen files (<code>00_fit-gp.R</code>, <code>00_fit-paine.R</code>, <code>00_fit-spline.R</code>, <code>00_m3-metrics.R</code>, <code>00_sim-*.R</code>, the Stan file) are not edited.</p>
+</section>
+
+</main>
+</div>
+
+<footer>
+  <div class="in">
+    AAGI is an investment of the Grains Research and Development Corporation. <span class="verify">funding wording not yet verified</span>
+    <div class="logos">
+      <img src="assets/GRDC_logo.png" alt="Grains Research and Development Corporation" height="56">
+      <img src="assets/AAGI_logo.png" alt="Analytics for the Australian Grains Industry" height="56">
+      <span class="logo-ph">School logo (Research School of Finance, Actuarial Studies and Statistics): to be supplied</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

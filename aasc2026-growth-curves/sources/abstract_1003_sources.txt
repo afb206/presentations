@@ -1,0 +1,12 @@
+Export of stored fits for plant 1135FA1003 (no fitting). Created 2026-11-23 15:48:36 by hal9000
+
+Sources (path  md5  what was taken):
+data/data-real/m5_arabidopsis_firstlook.rds 3941a1e37cc3b124dc5c934ae2279c49 $tables, plant_id 1135FA1003, arms log_nls and spline_log
+outputs/gp_arab_set/20261120_214053/arab_set_fits.rds ab29c41544f661461225efa43f9c8b02 res[[3]]$out (jobs[3,]: V0, 1135FA1003)
+outputs/gp_arab_mj_set/run_20261122_231703/arab_mj_set_fits.rds 93bca250a195d3c3f6e03daccf72baea mj[["1135FA1003"]]$out
+
+Plant seed (GP V0 and M-J stan_seed): 6000002
+Chosen Paine model (log_nls arm, A1 fits$model): logis4
+Rows kept: whole-number t, 1 to 44 (44 per tool). Values written with 17 significant digits; round-trip identical.
+
+Exporting script: /tmp/poster_1003_export/export_1003.R  md5 d916c83735f2e7a6347e49c8cef79a12

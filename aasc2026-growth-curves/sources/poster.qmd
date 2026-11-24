@@ -1,0 +1,80 @@
+---
+title: "Sharp, honest or robust? What growth-curve models trade off when plant data are sparse"
+author:
+  - "Andrew F. Bowerman¹,²"
+  - "Frederike Stock³"
+  - "Richard Poiré³"
+  - "Emi Tanaka¹,²"
+kicker: "Modelling plant growth for biological discovery · AASC2026"
+affiliation: "¹ Research School of Finance, Actuarial Studies and Statistics, The Australian National University  ·  ² Analytics for the Australian Grains Industry (AAGI)  ·  ³ Australian Plant Phenomics Network, Research School of Biology, The Australian National University"
+report-url: "https://example.org/replace-with-your-report"
+report-contact: '\fontsize{21pt}{25pt}\selectfont andrew.bowerman@anu.edu.au'
+format:
+  anu-poster-pdf:
+    background: grey
+---
+
+<!-- DRAFT 1, Mon 23 Nov. Numbers are double-brace tokens filled by scripts/fill_numbers.py from sources/;
+     see source_list.csv. Figures are placeholders until redrawn at 232 x 160 mm from the saved CSVs.
+     Graphical abstract (four tiles) still to be set in the template: Paine-style mechanistic (AAGI Black),
+     ASReml spline (Orange), GP V0 (Teal, lighter), GP M-J (Teal, darker). Colours to be confirmed. -->
+
+::: {.take-home}
+```{=latex}
+\fontsize{44pt}{55pt}\selectfont\mdseries
+```
+**Sharp** means narrow bands. **Honest** means bands that cover the truth about as often as claimed. **Robust** means the fit rarely fails. No tool gives all three: the best choice depends on the data and on how far ahead we predict.
+:::
+
+::: {.problem}
+Plants are measured at few, uneven times, yet we need smooth curves, growth rates and honest uncertainty.
+:::
+
+::: {.why-it-matters}
+Growth curves and rates guide breeding and management. A tool too sure misleads; one too vague gives no answer.
+:::
+
+::: {.claim fig="figs/claim1.pdf" heading="In simulation, thinner data cost coverage or width: on sparse designs no tool keeps both."}
+Thinnest design: GP+L and GP cover 1.00 and 1.00, with bands 114% and 374% of K wide. GF (log) covers 0.61 at 14% of K.
+:::
+
+::: {.claim fig="figs/claim2.pdf" heading="On real plants, the closest tool depends on how far past the last reading we predict."}
+One genotype (C24), scored only on left-out readings. Last reading left out: repeat-last 0.059, GP+L 0.062. Days 36 to 44, after a Day 30 cut: GF (log) 0.59 (14 of 802 failed), GP+L 0.68, SPL 2.34, GP 2.49.
+:::
+
+::: {.claim fig="figs/claim3.pdf" heading="As we predict further ahead, intervals widen, but only some tools keep catching the data."}
+Longest horizon: share of left-out readings inside the 90% interval, failed fits counted as misses. GP+L 99%, GF (log) 88%, GP 85% (the widest bands), SPL 54%. Plain natural-scale arms: far too narrow.
+:::
+
+::: {.next}
+```{=latex}
+\fontsize{34pt}{44pt}\selectfont
+```
+Next: how few plants need dense measuring? We will test borrowing their information for sparsely measured relatives and neighbours, adding genetics and spatial information, starting with GP+L and spline refinements.
+:::
+
+::: {.methods}
+```{=latex}
+\fontsize{21pt}{26pt}\selectfont
+```
+**GF** growth-function fit by nls: best of monomolecular, 3- and 4-parameter logistic and Gompertz (AIC). **SPL** ASReml smoothing spline. **GP** frozen Gaussian process, no mean function. **GP+L** GP with logistic mean. **Hold-out** H1 last reading left out, H2 last two, H3 all after Day 30.
+:::
+
+:::: {.references}
+\fontsize{14pt}{17pt}\selectfont
+Paine CET et al. (2012) Methods Ecol Evol 3:245-256. doi:10.1111/j.2041-210X.2011.00155.x ·
+Carpenter B et al. (2017) Stan. J Stat Softw 76(1). doi:10.18637/jss.v076.i01 ·
+Stan Development Team (2025) RStan 2.32.7. mc-stan.org ·
+Rasmussen CE, Williams CKI (2006) Gaussian Processes for Machine Learning. MIT Press ·
+Verbyla AP et al. (1999) J R Stat Soc C 48:269-311. doi:10.1111/1467-9876.00154 ·
+Butler DG et al. (2023) ASReml-R Reference Manual 4.2. VSN International ·
+Junker A et al. (2015) Front Plant Sci 5:770. doi:10.3389/fpls.2014.00770
+:::
+
+::: {.funding}
+\fontsize{20pt}{25pt}\selectfont AAGI is an investment of the Grains Research and Development Corporation.
+:::
+
+::: {.acknowledgements}
+\includegraphics[width=100mm]{GRDC_logo_primary_cmyk.jpg}
+:::
