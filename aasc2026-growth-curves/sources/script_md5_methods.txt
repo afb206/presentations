@@ -1,0 +1,11 @@
+99053b8386444dfff49697dcbd378616  00_fit-gp.R
+9860151c29063596e4010dc57f8bc01d  00_fit-paine.R
+535eb47048482e0edf7b6b9bd24744cb  00_fit-spline.R
+9c40eeac49656b1269e1ead6a3a68f89  00_m3-metrics.R
+1a8c2e7390ce23fa5d50d20e1b9207c3  00_sim-noise.R
+4264b87cab4615cd1186d1a7024a318d  00_sim-sampling.R
+27533e5a1e41757dbbb2c6044e6b5555  00_sim-scenarios.R
+0d80690719f66d4b7949ddb90e63aa62  00_sim-truth.R
+0363c3df96a1e0bb26df7835da491ab7  gp_marginal_matern52_deriv.stan
+90c3d135fe40659882c4a744a1c1e9f6  gp_mm_logistic.stan
+b102382cff509968fef0df27dd68f80b  00_fit-gp-mm.R

@@ -196,12 +196,12 @@
       <li>length-scale ~ inverse-gamma(2.789147, 16.092788)</li>
       <li>GP standard deviation ~ half Student-t(3, 0, sd_scale)</li>
       <li>slope b ~ normal(0, b_scale); intercept ~ Student-t(3, ly_med, sd_scale); sigma ~ half-normal(0, 1)</li>
-      <li>rstan 2.32.7, R 4.5.2 <span class="verify">confirm against sessionInfo</span></li>
+      <li>rstan 2.32.7, R 4.5.2</li>
     </ul>
   </details>
 
   <h3><span class="chip c-gpl">GP+L</span> Gaussian process with a logistic mean</h3>
-  <p>The GP above with a logistic mean function, sampled with <code>adapt_delta = 0.99</code>. <span class="verify">Description to be checked against the M-J script before publishing; the poster session did not read that script.</span></p>
+  <p>The GP above with a logistic mean function in place of the straight line on the log scale: size follows a three-parameter logistic (plateau, rate, midpoint), and its three parameters are sampled jointly with the GP settings, using priors set by rules from each curve’s own readings. Sampled with <code>adapt_delta = 0.99</code>. In the script (<code>00_fit-gp-mm.R</code>, version 0.1, 20 Nov 2026, md5 b102382c…) the idea that a logistic mean reduces the sag between readings and the surge in growth rate at the end is labelled a hypothesis and “untested”; the script records no test result. The comparisons on this page are the test.</p>
 
   <h3>Why the log scale</h3>
   <p>On the log scale RGR is simply the slope of the curve, and growth rates come from joint draws, which avoids dividing one uncertain number by another. We do not claim that the log scale <em>causes</em> any pattern in the coverage of the log growth-function arm; that was not isolated.</p>
@@ -210,7 +210,7 @@
     <div class="cap">Software versions</div>
     <div class="src">{{tbl_session_info}} ← sessionInfo export</div>
   </div>
-  <p><b>References.</b> {{references_list}} <span class="verify">Poster has seven; Vehtari et al. 2021 (R-hat) is a candidate to add.</span></p>
+  <p><b>References.</b> {{references_list}}</p>
 </section>
 
 <!-- 4 DATA ----------------------------------------------------------------->
@@ -221,12 +221,11 @@
   </div>
 
   <h3>Arabidopsis C24 (rosette area)</h3>
-  <p>One genotype (C24), days 1 to 44, from Junker et al. (2015; e!DAL record 1135FA_analysis.xlsx, CC BY 4.0). Plants were separated into <em>moving</em> and <em>stationary</em> groups from the sampling-density pattern. <span class="verify">project notes say this matches the paper’s 384/100 split before cleaning; not checked against a file here</span></p>
+  <p>One genotype (C24), days 1 to 44, from Junker et al. (2015; e!DAL record 1135FA_analysis.xlsx, CC BY 4.0). Plants were separated into <em>moving</em> and <em>stationary</em> groups from the sampling-density pattern. The data status notes give 384 moving and 100 stationary plants before cleaning, which they say matches the paper; no table of those counts was saved.</p>
   {{tbl_arab_valid}}
   <div class="slot"><span class="tag">Table slot</span>
     <div class="cap">Cleaning stages and plant counts</div>
     <div class="src">{{tbl_arab_cleaning}} ← README_arabidopsis_status.txt, count tables</div>
-    <div class="need">Needs: counts at each cleaning stage, moving versus stationary.</div>
   </div>
 
   <h3>Wheat (FIP, ETH Zürich)</h3>
@@ -296,7 +295,7 @@
     <div class="src">{{fig_spike}} ← A3 refit and P1–P5 source CSVs; SC1 d1–d3</div></div>
 
   <h3>Step 3 declared verdicts</h3>
-  <p>Verdicts declared before the runs are kept on record here, stated as what was declared and what was observed, without pass or fail wording.</p>
+  <p>The Step 3 rules were declared before the runs. This table gives the quantities those rules were built from, without pass or fail wording; the declared verdict for each rule is in the <code>mm3_c1_c5.csv</code> and <code>mm3_c6_c7.csv</code> files named in the note, and the rules were not changed after the results.</p>
   <div class="slot"><span class="tag">Table slot</span><div class="cap">Declared criteria and observed values</div>
     <div class="src">{{tbl_step3}} ← Step 3 tables</div></div>
 </section>

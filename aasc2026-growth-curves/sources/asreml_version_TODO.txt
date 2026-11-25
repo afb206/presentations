@@ -1,0 +1,8 @@
+ASReml version: TODO for Andrew (own login, not hal9000)
+Please append the output of:  packageVersion("asreml"); sessionInfo()
+
+From a saved log (copied, not run by hal9000):
+  source: logs/arab_holdout_spline_run_andrewb_20261123_011807.log  (md5 60058bbcd7fa2a229d857a58f658cd1c), line 119:
+  asreml 4.2.0.382 | threads option: 1 | R version 4.5.2 (2025-10-31) 
+Also stated in logs/arab_holdout_spline_checks_main_andrewb_20261123_005945.log line 11:
+  asreml 4.2.0.382 | asreml.options()$threads at load (nothing set): -1 

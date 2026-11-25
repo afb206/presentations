@@ -194,7 +194,7 @@ def blk_arab_valid():
 
 def blk_references():
     txt = open(os.path.join(SRC, "poster.qmd")).read()
-    seg = txt[txt.index("{.references}"):txt.index("{.funding}")]
+    seg = txt[txt.index("{.references}") + len("{.references}"):txt.index("{.funding}")]
     items = [s.strip() for s in seg.replace("\\fontsize{14pt}{17pt}\\selectfont", "").replace("::::", "").replace(":::", "").split("·") if s.strip()]
     li = ""
     for it in items:
@@ -202,6 +202,160 @@ def blk_references():
         it = re.sub(r"doi:(\S+)", r'<a href="https://doi.org/\1">doi:\1</a>', it)
         li += f"<li>{it}</li>"
     return f'<ol class="tight">{li}</ol>'
+
+
+def tbl_session_info():
+    rows = [("R", "4.5.2 (2025-10-31)", "sessionInfo_hal9000.txt; Andrew’s own session (pasted in chat, 25 Nov 2026, not a saved file) agrees"),
+            ("asreml", "4.2.0.382", "asreml_version_TODO.txt (quotes a saved log, line 119) and Andrew’s pasted packageVersion(\"asreml\")"),
+            ("rstan", "2.32.7", "sessionInfo_hal9000.txt"), ("StanHeaders", "2.39.1", "sessionInfo_hal9000.txt"),
+            ("brms", "2.23.0", "sessionInfo_hal9000.txt (listed as loaded; header lines of the file)"),
+            ("posterior", "1.7.0", "sessionInfo_hal9000.txt"), ("nlme", "3.1.169", "sessionInfo_hal9000.txt"), ("MASS", "7.3.65", "sessionInfo_hal9000.txt")]
+    body = "".join(f"<tr><td class='m'>{esc(a)}</td><td>{esc(b_)}</td><td>{esc(c_)}</td></tr>" for a, b_, c_ in rows)
+    return ('<div class="tblwrap"><table><caption>Software versions</caption><tr><th>Package</th><th>Version</th><th>Where it is recorded</th></tr>' + body + '</table></div>'
+            '<p class="note">The R session on the analysis server (hal9000) has no ASReml; the spline fits ran under Andrew’s own login. Platform of the server session: Ubuntu 24.04.3 LTS, BLAS/LAPACK 3.12.0. '
+            'Whether every fit ran under exactly these library versions is not recorded in the saved files.</p>')
+
+def tbl_step3():
+    a = rd("mm3_c1_c5.csv").set_index("variant"); b = rd("mm3_c6_c7.csv")
+    mj, ms = a.loc["MJ"], a.loc["M2S"]
+    bm = b[(b.variant == "MJ") & (b.scope == "all curves")].iloc[0]; bs = b[(b.variant == "M2S") & (b.scope == "all curves")].iloc[0]
+    f1 = lambda x: f"{x:.1f}"; s3 = lambda x: f"{x:+.3f}"
+    R = [("Paired change in coverage vs GP (size / growth rate AGR / RGR), dense designs", "mean change over 90 paired datasets (9 dense scenarios)",
+          f"{s3(mj.c1_dcov_y)} / {s3(mj.c1_dcov_agr)} / {s3(mj.c1_dcov_rgr)}", f"{s3(ms.c1_dcov_y)} / {s3(ms.c1_dcov_agr)} / {s3(ms.c1_dcov_rgr)}"),
+         ("Median paired change in relative interval score (size / AGR / RGR)", "negative = lower score than GP",
+          f"{mj.c2_dis_med_y:.0f} / {mj.c2_dis_med_agr:.0f} / {mj.c2_dis_med_rgr:.0f}", f"{ms.c2_dis_med_y:.0f} / {ms.c2_dis_med_agr:.0f} / {ms.c2_dis_med_rgr:.0f}"),
+         ("Fit failure rate on clean test data", "", pc(mj.c2_fail_rate_v, 1), pc(ms.c2_fail_rate_v, 1)),
+         ("Change in the share of fits flagged by the diagnostics rule vs GP", "", s3(mj.c3_dflag), s3(ms.c3_dflag)),
+         ("Spike: interval score spiked / clean, s = 0.05 / 0.12 / 0.30", "median over datasets",
+          f"{f1(mj.c4_ratio_spike_005)} / {f1(mj.c4_ratio_spike_012)} / {f1(mj.c4_ratio_spike_030)}", f"{f1(ms.c4_ratio_spike_005)} / {f1(ms.c4_ratio_spike_012)} / {f1(ms.c4_ratio_spike_030)}"),
+         ("Spike: same ratio for GP on the same datasets", "", f"{f1(mj.c4_ratio0_spike_005)} / {f1(mj.c4_ratio0_spike_012)} / {f1(mj.c4_ratio0_spike_030)}", f"{f1(ms.c4_ratio0_spike_005)} / {f1(ms.c4_ratio0_spike_012)} / {f1(ms.c4_ratio0_spike_030)}"),
+         ("Two-phase curves: coverage of size, variant / GP; failure rate", "", f"{mj.c5_cov_v:.3f} / {mj.c5_cov_0:.3f}; {pc(mj.c5_fail_v)}", f"{ms.c5_cov_v:.3f} / {ms.c5_cov_0:.3f}; {pc(ms.c5_fail_v)}"),
+         ("End-of-series AGR error, thin designs (median, % of peak AGR), variant / GP", "", f"{bm.c6_thin_v:.1f} / {bm.c6_thin_0:.1f}", f"{bs.c6_thin_v:.1f} / {bs.c6_thin_0:.1f}"),
+         ("Mid-gap size error, thin5 + thin4 (median, % of K), variant / GP", "", f"{bm.c7_v:.1f} / {bm.c7_0:.1f}", f"{bs.c7_v:.1f} / {bs.c7_0:.1f}"),
+         ("Band width, variant / GP: end window; mid-gap", "", f"{bm.c6_bw_ratio_all:.2f}; {bm.c7_bw_ratio_thin54:.2f}", f"{bs.c6_bw_ratio_all:.2f}; {bs.c7_bw_ratio_thin54:.2f}")]
+    body = "".join(f"<tr><td>{esc(a_)}<br><small>{esc(n_)}</small></td><td class='num'>{esc(x)}</td><td class='num'>{esc(y)}</td></tr>" for a_, n_, x, y in R)
+    return ('<div class="tblwrap"><table><caption>Step 3 quantities, simulation only (x50t run, clean and spiked test data)</caption>'
+            '<tr><th>Quantity</th><th>GP+L (joint)</th><th>GP+L two-stage (not one of the five arms)</th></tr>' + body + '</table></div>'
+            '<p class="note">Read from <code>mm3_c1_c5.csv</code> and <code>mm3_c6_c7.csv</code> (all curves). The files also carry a verdict column for each rule, declared before the runs; those words are not reproduced here. '
+            'The spike ratio is larger for GP+L than for GP, but the Step 3 report (<code>REPORT_A2_mm_step3_results_2026-11-22.md</code>) notes that GP+L’s own clean score is about half GP’s, so the same or a smaller spiked score gives a larger ratio: a ratio of scores is not a direct measure of the spiked score. Smooth simulated truths; spikes hit only the earliest reading.</p>')
+
+def _lead(x):                           # "0.0887 (0.0353 to 0.204)" -> 0.0887 ; "1.04e+03 (..)" -> 1040
+    return float(str(x).split(" ")[0])
+
+def tbl_arab_flags():
+    d = rd("arab_mj_set_per_fit.csv")
+    rows = []
+    for arm, lab in [("V0", "GP (stored fits, adapt_delta 0.8)"), ("MJ", "GP+L (adapt_delta 0.99)")]:
+        g = d[d.arm == arm]
+        r44 = g.d44_ratio.dropna()
+        rows.append((lab, len(g), int(g.ok.sum()), f"{int(g.flagged.sum())} ({pc(g.flagged.mean(), 1)})", int((g.divergent > 0).sum()), int((g.treedepth_hits > 0).sum()),
+                     f"{g.max_rhat.median():.3f} ({g.max_rhat.max():.2f})", f"{g.min_ess_bulk.median():.0f} ({g.min_ess_bulk.min():.1f})",
+                     f"{r44.median():.3f}; {pc((r44 > 1).mean(), 1)} of {len(r44)}"))
+    body = "".join("<tr>" + "".join(f"<td>{esc(x)}</td>" for x in r) + "</tr>" for r in rows)
+    return ('<div class="tblwrap"><table><caption>Arabidopsis C24, moving plants: diagnostics of the two Gaussian-process fits, description only</caption>'
+            '<tr><th>Arm</th><th>Plants</th><th>Fits that worked</th><th>Flagged fits</th><th>Fits with any divergence</th><th>Fits with tree-depth hits</th>'
+            '<th>Max R-hat: median (largest)</th><th>Min bulk ESS: median (smallest)</th><th>Fitted size / Day 44 reading: median; share above 1</th></tr>' + body + '</table></div>'
+            '<p class="note">From <code>arab_mj_set_per_fit.csv</code>. Real data with no known truth, so nothing here is accuracy. Flagged fits are counted as worked; failures would count as misses (there were none). '
+            'Fit-against-reading comparisons are in-sample.</p>')
+
+def tbl_two_mode():
+    d = rd("arab_mj_diag_8chain_vs_original.csv"); c = rd("arab_mj_diag_per_chain.csv")
+    c["early"] = c.tm_med < 12
+    body = ""
+    for _, r in d.iterrows():
+        cc = c[(c.plant_id == r.plant_id) & (c.fit.str.startswith("original" if r.fit.startswith("original") else "8 chains"))]
+        body += (f"<tr><td class='m'>{esc(r.plant_id)}</td><td>{esc(r.fit)}</td><td>{int((~cc.early).sum())} / {int(cc.early.sum())}</td><td>{'yes' if r.flagged else 'no'}</td>"
+                 f"<td class='num'>{r.max_rhat:.2f}</td><td class='num'>{r.min_ess_bulk:.0f}</td><td class='num'>{int(r.divergent)}</td><td class='num'>{int(r.treedepth_hits)}</td>"
+                 f"<td class='num'>{r.fit_grid_d44:,.0f}</td><td class='num'>{r.band_width_d44:,.0f}</td><td class='num'>{r.day44_reading:,.0f}</td></tr>")
+    return ('<div class="tblwrap"><table><caption>Four plants whose GP+L chains settle in two places (diagnostic, description only)</caption>'
+            '<tr><th>Plant</th><th>Fit</th><th>Chains: main growth / early step</th><th>Flagged</th><th>Max R-hat</th><th>Min bulk ESS</th><th>Divergences</th><th>Tree-depth hits</th>'
+            '<th>Fit, Day 44 (mm²)</th><th>Band width, Day 44 (mm²)</th><th>Day 44 reading (mm²)</th></tr>' + body + '</table></div>'
+            '<p class="note">From <code>arab_mj_diag_8chain_vs_original.csv</code> and <code>arab_mj_diag_per_chain.csv</code>. A chain is counted as “early step” when its logistic midpoint is before Day 12; '
+            'the other chains put the midpoint between Day 21 and Day 31. More chains did not settle the split. The fitted median curve at Day 44 barely changes between the original and the 8-chain fit; the band and the noise estimate do change when the chains split. '
+            'Why the chains split is a hypothesis that has not been tested: all four plants have a zero reading early on and a steep Day 6 to Day 8 step, so a logistic on that early rise may fit about as well as one on the main rise.</p>')
+
+def tbl_improved():
+    rows = []
+    for L in ["H1", "H2", "H3"]:
+        a = rd(f"EXTRA_holdout_{L}_five_tools_summaryA_failures_as_misses.csv"); a = a[a.group == "all hidden readings"].iloc[0]
+        fc = rd(f"EXTRA_holdout_{L}_failure_counts.csv").set_index("tool")
+        for t_, key in [("natural_nls", "natural_nls"), ("natural_improved", "natural_improved"), ("log_nls", "log_nls"), ("MJ", "MJ")]:
+            rows.append((L, LAB[t_] if t_ != "natural_improved" else "GF (nat), improved (EXTRA)", a[f"inclusion_{key}"], f"{_lead(a[f'abs_log_err_{key}_all5']):.3f}", f"{_lead(a[f'width_mm2_{key}_all5']):,.0f}",
+                         f"{int(fc.loc[t_, 'plants_with_a_failure'])} plants ({int(fc.loc[t_, 'readings_failed'])} readings)"))
+    body = "".join("<tr>" + "".join(f"<td>{esc(x)}</td>" for x in r) + "</tr>" for r in rows)
+    return ('<div class="tblwrap"><table><caption>Extra arm <code>natural_improved</code> (GF on the natural scale with a variance that can grow with size), all left-out readings</caption>'
+            '<tr><th>Level</th><th>Arm</th><th>Inside the 90% interval (failures as misses)</th><th>Median absolute log error</th><th>Median interval width (mm²)</th><th>Fits that failed</th></tr>' + body + '</table></div>'
+            '<p class="note">' + esc(HOLDOUT_LABEL) + ' Post hoc arm, proposed after the H1 to H3 results; not part of the declared design. Error and width are over the readings where all five arms worked, so declared-arm figures here can differ slightly from the main table (for example H3 GF (log) error). '
+            'Read from <code>EXTRA_holdout_H*_five_tools_summaryA_failures_as_misses.csv</code> and <code>EXTRA_holdout_H*_failure_counts.csv</code>.</p>'
+            '<p><b>What it showed.</b> Letting the noise grow with size widened the natural-scale intervals and raised the share inside them, but it stayed far below 90%. The log-scale GF arm reaches a much higher share with wider intervals. '
+            'The constant residual sd is therefore at most part of the reason the plain natural-scale arm’s intervals are narrow. Other possible causes were listed in the report and were not tested.</p>'
+            '<p><b>Corrections carried from the report’s erratum (23 Nov 2026).</b> (1) The statement that the log-scale intervals are about 8 times wider than natural_improved’s holds only for H1; from the median widths the ratio is about 8 for H1, about 10 for H2 and about 4 for H3. '
+            '(2) Most of natural_improved’s failures (4 of 7 plants in H1, 7 of 10 in H2, 39 of 69 in H3) come from the frozen fallback rule, where a chosen plain-nls fit counts as a failure under this arm’s declared rule, so the failure rate reflects that rule as much as the variance function. '
+            'The source report is <code>REPORT_A3_EXTRA_natural_improved_H1_H2_H3_2026-11-23.md</code>.</p>')
+
+def _need(fname, *strings):             # hand-keyed numbers must appear in the named file
+    txt = open(os.path.join(SRC, fname), encoding="utf-8").read()
+    for x in strings:
+        assert x in txt, (fname, x)
+
+def _tbl(caption, head, rows, note=""):
+    th = "".join(f"<th>{esc(h)}</th>" for h in head)
+    body = "".join("<tr>" + "".join(f"<td>{x}</td>" for x in r) + "</tr>" for r in rows)
+    return f'<div class="tblwrap"><table><caption>{caption}</caption><tr>{th}</tr>{body}</table></div>' + (f'<p class="note">{note}</p>' if note else "")
+
+def tbl_arab_cleaning():
+    _need("README_arabidopsis_status.txt", "- 1 row", "51 plants", "Day 29", "Day 41", "8 plants", "485 raw Plant IDs", "425 plants", "384", "100")
+    rows = [("Raw sheet, plant rows", "485 plant IDs", "one leaked label row (<code>1135FA</code>) removed first (1 row)"),
+            ("Dead or failed germination", "51 plants removed", "peak area below 100 mm²"),
+            ("Bad capture dates", "Day 29 and Day 41 removed for all plants", "within-plant crash rates well above neighbouring days"),
+            ("Stunted plants", "8 plants removed", "peak area below 500 mm², at a natural gap in the sorted peak areas"),
+            ("After cleaning", "425 plants", "see the table above for moving and stationary counts, read from the saved cleaned file")]
+    return _tbl("Arabidopsis cleaning steps, in order", ["Step", "Count", "Rule"], rows,
+                "From <code>README_arabidopsis_status.txt</code> (a status note, not a count table: no table of plants per stage was saved). The moving and stationary groups are reconstructed from the sampling pattern, not recorded; "
+                "the note gives 384 moving and 100 stationary before cleaning and says this matches the paper. Days 38 and 40 are absent and Day 43 has far fewer plants, so pooled summaries on those days reflect sample size.")
+
+def tbl_wheat_desc():
+    _need("README_data_provenance.md", "15 trait files", "14 design files", "142,646 rows", "137,762 rows", "FPWW028", "5 of 7 TLS dates", "roughly 9-12x")
+    _need("README_height_data_status.txt", "lodging NOT yet filtered")
+    rows = [("Source", "FIP 1.0, ETH Zürich; plant height from the CroPyDB trait export (not the image-bundled copy)"),
+            ("Files used", "15 trait files and 14 design files, joined by plot"),
+            ("Rows", "142,646 in the input file; 137,762 in the cleaned file"),
+            ("Exclusions", "lot FPWW028 (small 2019 lot) removed; laser-scan heights dropped on days with a drone measurement in lot FPWW022_lot3 (5 of 7 dates); six FPWW012 plants removed by a provisional rule"),
+            ("Canopy cover", "not used (senescence artefact)"),
+            ("Replication", "check plots are measured roughly 9 to 12 times as often as other genotypes, from earlier exploration; no count table was saved"),
+            ("Lodging", "not yet filtered; detection is not finalised, so the wheat data are described only")]
+    return _tbl("Wheat height data, as handled", ["Item", "What the notes record"], rows,
+                "From <code>README_data_provenance.md</code> (wheat section) and <code>README_height_data_status.txt</code>. The status note carries a placeholder date. Nothing is fitted to the wheat data on this page.")
+
+def tbl_maize_desc():
+    _need("README_data_provenance.md", "1,752 accessions", "5 timepoints (37, 44, 60, 73, 115 DAP)", "8,760 rows", "138,329 rows", "NSL437884", "79 daily values")
+    rows = [("Source", "Ames panel NDVI from drone flights (Wang et al., Dryad); published P-spline parameters and daily predictions are kept as a benchmark"),
+            ("Accessions and time points", "1,752 accessions; 5 time points (37, 44, 60, 73 and 115 days after planting)"),
+            ("Rows", "8,760 NDVI rows; 1,752 parameter rows; 138,329 daily-prediction rows (79 days per genotype)"),
+            ("One odd accession", "NSL437884 has the text “FALSE” where its predictions should be: no benchmark predictions, but its NDVI readings and parameters are kept"),
+            ("What NDVI is", "a bounded greenness index, not a size, so growth rates from it are not true AGR or RGR")]
+    return _tbl("Maize NDVI panel, as handled", ["Item", "What the notes record"], rows,
+                "From <code>README_data_provenance.md</code> (maize section). No table of genotypes and time points was saved. The prediction rows are consistent with 1,751 genotypes × 79 days (138,329), which is my arithmetic from those two numbers, not a saved count. Described only.")
+
+def tbl_limits():
+    rows = [("The hold-out is one genotype and one dataset, mostly near the plateau; a trivial baseline is as close as GP+L there", "Both are stated; H3 is the test before the plateau"),
+            ("GP+L’s plateau prior is centred on the largest remaining reading, so it runs low after a cut well before the plateau (H3)", "Documented limit. Not tuned on these data; any variant is declared first and tested in simulation"),
+            ("GP here is the frozen simulation-settings Gaussian process with no mean function", "Labelled as such on every hold-out result"),
+            ("Spline and natural-scale growth-function fits fail on some plants and readings", "Failure counts sit beside every error; failures count as misses for coverage; failures are not patched"),
+            ("GP+L chains settle in two places for some plants (four known; others not examined)", "The fitted curve is stable but the band and noise estimate depend on the mode"),
+            ("Simulated truths are very smooth; the simulated logistic is logistic + 5 mm²; spikes hit only the earliest reading", "Stated with every simulation result"),
+            ("A spike-cleaning rule (SC1) works only for blatant spikes on dense and thin7 designs", "Tested in simulation only; not used on real data"),
+            ("Wheat lodging detection is not finalised", "The wheat look needs a saved list of cut points; not run"),
+            ("Unexplained: <code>log_improved</code> equals <code>log_nls</code>; the growth-function “published” arms equal <code>log_nls</code> in about half of fits in an earlier grid; GP+L flags more fits under proportional noise; spline fits hit singularities", "Reported as unexplained"),
+            ("The saved software record is the server’s <code>sessionInfo</code>; ASReml ran under Andrew’s own login", "Whether every fit used exactly these library versions is not recorded")]
+    return _tbl("Limits and open items", ["Limit or open item", "How it is handled here"], [(a, b) for a, b in rows],
+                "From section 7 of the project state file <code>CONTROLLER_STATE_2026-11-23_rev6a.md</code> (a project document, not copied here), with the last row added from the export.")
+
+def scripts_links():
+    L = [l.split() for l in open(os.path.join(SRC, "script_md5_methods.txt"))]
+    return ("the method files used are listed here by name and the first eight characters of their md5; they are not published in this repository: " +
+            "; ".join(f"<code>{esc(n)}</code> {m[:8]}…" for m, n in L) +
+            '. Full md5s are in <a href="sources/script_md5_methods.txt"><code>sources/script_md5_methods.txt</code></a>')
 
 # ======================================================================================= slots
 FILLED = {
@@ -213,6 +367,21 @@ FILLED = {
     "tbl_sim_cov_width": tbl_sim(),
     "fig_holdout_horizon": blk_fig_horizon(),
     "tbl_holdout": tbl_holdout(),
+    "tbl_session_info": tbl_session_info(),
+    "tbl_step3": tbl_step3(),
+    "tbl_arab_flags": tbl_arab_flags(),
+    "fig_arab_desc": fig_block("fig7_arab_desc.svg", "Fitted size over the Day 44 reading, and the GP+L logistic midpoint, moving plants",
+        "<b>Fit against the Day 44 reading (left) and GP+L logistic midpoint (right).</b> Arabidopsis C24, moving plants, from <code>arab_mj_set_per_fit.csv</code>. Description only, in-sample: no truth is known, so this is not accuracy. The few plants at an early midpoint are discussed below."),
+    "fig_two_mode": tbl_two_mode(),
+    "tbl_improved": tbl_improved(),
+    "tbl_arab_cleaning": tbl_arab_cleaning(),
+    "tbl_wheat_desc": tbl_wheat_desc(),
+    "tbl_maize_desc": tbl_maize_desc(),
+    "tbl_limits": tbl_limits(),
+    "fig_paired_gf": fig_block("fig5_paired_gf.svg", "Coverage of the true size curve for GP+L and the growth-function arms, by sampling design",
+        "<b>Growth-function arms refit on GP+L’s datasets.</b> Coverage of the true size curve by design, from <code>P1_cov_y.csv</code> (paired refit). Open markers: no fit worked in that design (0 of the datasets). Dashed line: 0.95. Simulation only: smooth truths, logistic = logistic + 5 mm², failed fits count as misses."),
+    "fig_spike": fig_block("fig6_spike.svg", "Interval score ratio, spiked over clean, for GP and GP+L, by spike size",
+        "<b>Early spike.</b> Median ratio of the interval score on spiked data to the same dataset clean (<code>mm3_c1_c5.csv</code>, columns <code>c4_ratio</code> and <code>c4_ratio0</code>; 240 datasets each). The spike replaces the earliest reading only. Simulation only; smooth simulated truths."),
 }
 def replace_slot(htm, token, content):
     key = "{{" + token + "}}"
@@ -232,7 +401,7 @@ for tok, content in FILLED.items():
     htm = replace_slot(htm, tok, content)
 # the Home trade-off block should not carry a duplicated Figure 1 caption style; fine as is.
 htm = htm.replace("{{fig_plant}}", blk_fig_plant()).replace("{{tbl_arab_valid}}", blk_arab_valid())
-htm = htm.replace("{{references_list}}", blk_references())
+htm = htm.replace("{{references_list}}", blk_references()).replace("{{scripts_links}}", scripts_links())
 htm = htm.replace("{{poster_pdf_url}}", "assets/poster_A0_DRAFT21.pdf")
 htm = htm.replace("Poster (PDF)</a>", "Poster (PDF, draft 21)</a>")
 
@@ -257,6 +426,11 @@ def src_tables():
             ("Table, simulation", "scripts/assemble.py: tbl_sim", "mm3_fits_all.csv (mean cov_y, median w_y, count of ok), P1_cov_y.csv, P2_w_y.csv, G1_cov_y.csv, G2_w_y.csv (read as stored; lab gives fits that worked)"),
             ("Tables, left-out readings", "scripts/assemble.py: tbl_holdout, tbl_horizon", "F1a_error_each_tool.csv, F3_inclusion_width.csv (n and n_fail checked equal), F4b_H3_error_by_day_log_pairing.csv"),
             ("Table, Arabidopsis plants", "scripts/assemble.py: blk_arab_valid", "arabidopsis_rosette_area_valid.rds (counts of distinct Plant ID and rows by group)"),
+            ("Step 3 table, spike figure", "scripts/assemble.py: tbl_step3; scripts/figures.py: fig_spike", "mm3_c1_c5.csv, mm3_c6_c7.csv"),
+            ("Paired growth-function figure", "scripts/figures.py: fig_paired_gf", "P1_cov_y.csv"),
+            ("Arabidopsis tables and figure", "scripts/assemble.py: tbl_arab_flags, tbl_two_mode; scripts/figures.py: fig_arab_desc", "arab_mj_set_per_fit.csv, arab_mj_diag_8chain_vs_original.csv, arab_mj_diag_per_chain.csv"),
+            ("Extra arm table", "scripts/assemble.py: tbl_improved", "EXTRA_holdout_H1-H3 summaryA and failure_counts files; REPORT_A3_EXTRA_natural_improved_H1_H2_H3_2026-11-23.md (erratum text)"),
+            ("Data, limits, software tables", "scripts/assemble.py: tbl_arab_cleaning, tbl_wheat_desc, tbl_maize_desc, tbl_limits, tbl_session_info", "README_data_provenance.md, README_arabidopsis_status.txt, README_height_data_status.txt, sessionInfo_hal9000.txt, asreml_version_TODO.txt (numbers are hand-keyed and checked to appear in the file)"),
             ("References", "scripts/assemble.py: blk_references", "poster.qmd (references block)")]
     r2 = ""
     for a, s, fl in figs:

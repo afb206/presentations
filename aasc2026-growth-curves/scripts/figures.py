@@ -80,6 +80,61 @@ def fig_horizon():
     fig.legend(h, l, loc="lower center", bbox_to_anchor=(0.5, -0.17), ncol=3, fontsize=10)
     save(fig, "fig2_horizon.svg")
 
+# ---------------------------------------------------------------- paired GF arms (coverage of the size band by design)
+def fig_paired_gf():
+    P1 = rd("P1_cov_y.csv")
+    des = DES + ["sparse"]
+    arms = [("MJ", COL["MJ"], "o", "-"), ("log_nls", COL["log_nls"], "o", "-"), ("natural_nls", COL["natural_nls"], "o", "-"),
+            ("log_published", COL["log_nls"], "s", ":"), ("natural_published", COL["natural_nls"], "s", ":"),
+            ("log_improved", COL["log_nls"], "^", "--"), ("natural_improved", COL["natural_nls"], "^", "--")]
+    names = {"MJ": "GP+L", "log_nls": "GF (log)", "natural_nls": "GF (nat)", "log_published": "GF (log), published settings",
+             "natural_published": "GF (nat), published settings", "log_improved": "GF (log), improved (EXTRA)", "natural_improved": "GF (nat), improved (EXTRA)"}
+    fig, ax = plt.subplots(figsize=(9.0, 4.4))
+    for a, c, mk, ls in arms:
+        d = P1[P1.arm == a].set_index("group").reindex(des)
+        worked = d.lab.str.extract(r"^(\d+)/")[0].astype(float)
+        ax.plot(range(len(des)), d.est, ls, color=c, lw=1.4, zorder=1)
+        ax.scatter(range(len(des)), d.est, marker=mk, s=42, color=[c if w > 0 else "white" for w in worked], edgecolor=c, linewidth=1.4, zorder=2, label=names[a])
+    ax.axhline(0.95, color=INK, lw=0.8, ls=(0, (2, 2)))
+    ax.set_xticks(range(len(des))); ax.set_xticklabels(des)
+    ax.set_xlabel("Sampling design (fewer readings to the right)"); ax.set_ylabel("Coverage of the true size curve (95% band)")
+    ax.set_ylim(-0.03, 1.05)
+    h, l = ax.get_legend_handles_labels()
+    fig.legend(h, l, loc="lower center", bbox_to_anchor=(0.5, -0.2), ncol=3, fontsize=9.5)
+    save(fig, "fig5_paired_gf.svg")
+
+# ---------------------------------------------------------------- spike: ratio of interval score, spiked over clean
+def fig_spike():
+    c = rd("mm3_c1_c5.csv").set_index("variant")
+    lv = [("0.05", "005"), ("0.12", "012"), ("0.30", "030")]
+    fig, ax = plt.subplots(figsize=(7.2, 4.0))
+    w = 0.34
+    for j, (v, col, lab) in enumerate([("V0", COL["V0"], "GP"), ("MJ", COL["MJ"], "GP+L")]):
+        ys = [c.loc["MJ", ("c4_ratio0_spike_" + k) if v == "V0" else ("c4_ratio_spike_" + k)] for _, k in lv]
+        xs = [i + (j - 0.5) * w for i in range(3)]
+        ax.bar(xs, ys, width=w, color=col, label=lab)
+        for x_, y_ in zip(xs, ys): ax.text(x_, y_ + 0.2, f"{y_:.1f}", ha="center", fontsize=9.5)
+    ax.set_xticks(range(3)); ax.set_xticklabels([l for l, _ in lv])
+    ax.set_xlabel("Spike size s (spike = s × the 90th percentile of that dataset’s readings)"); ax.set_ylabel("Interval score, spiked / clean (median)")
+    ax.legend(loc="upper left")
+    save(fig, "fig6_spike.svg")
+
+# ---------------------------------------------------------------- Arabidopsis description: fit / Day 44 reading, and the GP+L logistic midpoint
+def fig_arab_desc():
+    d = rd("arab_mj_set_per_fit.csv")
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(10.0, 4.0))
+    bins = np.linspace(0.8, 1.6, 33)
+    for arm, c, lab in [("V0", COL["V0"], "GP"), ("MJ", COL["MJ"], "GP+L")]:
+        x = d[(d.arm == arm)].d44_ratio.dropna().clip(0.8, 1.6)
+        a1.hist(x, bins=bins, color=c, alpha=0.75, label=f"{lab} (n = {len(x)})")
+    a1.axvline(1, color=INK, lw=0.9, ls=(0, (2, 2)))
+    a1.set_xlabel("Fitted size / the Day 44 reading (in-sample; values above 1.6 shown at 1.6)"); a1.set_ylabel("Plants"); a1.legend()
+    m = d[d.arm == "MJ"].tm_med.dropna()
+    a2.hist(m, bins=np.arange(0, 40, 1.0), color=COL["MJ"])
+    a2.set_xlabel("GP+L logistic midpoint, posterior median (day)"); a2.set_ylabel("Plants (n = %d)" % len(m))
+    fig.tight_layout()
+    save(fig, "fig7_arab_desc.svg")
+
 # ---------------------------------------------------------------- Figure 3: inclusion against width
 def fig_calib():
     c = rd("F3_inclusion_width.csv")
@@ -133,4 +188,4 @@ def fig_plant():
     save(fig, "fig4_plant1003.svg")
 
 if __name__ == "__main__":
-    fig_sim(); fig_horizon(); fig_calib(); fig_plant()
+    fig_sim(); fig_horizon(); fig_calib(); fig_plant(); fig_paired_gf(); fig_spike(); fig_arab_desc()
