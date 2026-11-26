@@ -9,3 +9,4 @@
 0363c3df96a1e0bb26df7835da491ab7  gp_marginal_matern52_deriv.stan
 90c3d135fe40659882c4a744a1c1e9f6  gp_mm_logistic.stan
 b102382cff509968fef0df27dd68f80b  00_fit-gp-mm.R
+2e124d62d730e6bd9adde5b0c5c3d870  07_gp-mm-step3-fns.R

@@ -62,7 +62,8 @@
   details summary{cursor:pointer;font-weight:600}
   ul.tight li{margin:.2rem 0}
   footer{background:var(--soft);border-top:1px solid var(--line);padding:1.5rem}
-  footer .in{max-width:62rem;margin:0 auto;font-size:.9rem;color:var(--muted)}
+  footer .in{max-width:62rem;margin:0 auto;font-size:.9rem;color:var(--muted);text-align:center}
+  footer .logos{justify-content:center}
   .logos{display:flex;gap:1.4rem;align-items:center;flex-wrap:wrap;margin-top:.8rem}
   .logos img{width:auto}
   td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
@@ -113,7 +114,6 @@
   <div class="grp">Context</div>
   <a href="#limits">9 · Limits and open questions</a>
   <a href="#next">10 · What comes next</a>
-  <a href="#sources">11 · Sources</a>
 </nav>
 
 <main>
@@ -131,16 +131,15 @@
   <div class="slot"><span class="tag">Figure slot</span>
     <div class="cap">The trade-off picture (poster figures F1a, F3, F4b)</div>
     <div class="src">{{fig_tradeoff}} ← figure_sources.csv rows F1a, F3, F4b</div>
-    <div class="need">Needs: the three poster figures redrawn from their source CSVs in the poster style.</div>
   </div>
 
-  <h3>The four approaches, and the older names you may have seen</h3>
+  <h3>The four approaches</h3>
   <div class="tblwrap"><table>
-    <tr><th>Label here</th><th>What it is</th><th>Earlier names</th></tr>
-    <tr><td><span class="chip c-gflog">GF (log)</span> <span class="chip c-gfnat">GF (nat)</span></td><td>Growth-function fits (<code>nls</code>), best of four standard curves chosen by AIC; on the log or the natural scale</td><td>“Paine” (after Paine et al. 2012)</td></tr>
-    <tr><td><span class="chip c-spl">SPL</span></td><td>ASReml-R cubic smoothing spline</td><td>ASReml smoothing spline</td></tr>
-    <tr><td><span class="chip c-gp">GP</span></td><td>Gaussian process, Matérn 5/2, no mean function</td><td>V0</td></tr>
-    <tr><td><span class="chip c-gpl">GP+L</span></td><td>The same Gaussian process, with a logistic mean function</td><td>M-J</td></tr>
+    <tr><th>Label</th><th>What it is</th><th>In general terms</th></tr>
+    <tr><td><span class="chip c-gflog">GF (log)</span> <span class="chip c-gfnat">GF (nat)</span></td><td>Growth-function fits: the best of four standard growth curves (chosen by AIC), fitted on the log or the natural scale of size</td><td>Assume the plant follows a known S-shaped curve and estimate its few settings. Compact, and works with few readings, but is only as good as the shape assumed.</td></tr>
+    <tr><td><span class="chip c-spl">SPL</span></td><td>ASReml-R cubic smoothing spline</td><td>Lets the data draw a smooth curve, with the smoothness set by the data. Familiar to ASReml users.</td></tr>
+    <tr><td><span class="chip c-gp">GP</span></td><td>Gaussian process (Matérn 5/2 kernel) with no mean function</td><td>A flexible curve with a stated amount of wiggle. Where readings run out, it drifts back towards a straight line on the log scale.</td></tr>
+    <tr><td><span class="chip c-gpl">GP+L</span></td><td>The same Gaussian process, with a logistic mean function</td><td>The flexible curve now wiggles around an S-shape instead of a straight line, which suits plants that level off.</td></tr>
   </table></div>
 
   <h3>Reading the labels</h3>
@@ -174,37 +173,54 @@
     <li><b>Robust:</b> what happens as readings are removed, or when an early reading is a spike?</li>
   </ul>
   <p>We used simulated plants, where the true curve is known, and real Arabidopsis data, where it is not.</p>
+
+  <details><summary>Terms used on this page</summary>
+    <ul class="tight">
+      <li><b>Band (or interval):</b> the range a method says the answer lies in. A 95% band should contain the truth about 95% of the time.</li>
+      <li><b>Coverage:</b> how often a band contains the truth. Too low means the method is overconfident; near 1 with very wide bands means it is cautious but not sharp.</li>
+      <li><b>Plateau:</b> the size a plant levels off at. Written K for the logistic curve.</li>
+      <li><b>Log scale:</b> working with the logarithm of size, so that equal proportional changes look equal. On this scale the relative growth rate is simply the slope.</li>
+      <li><b>Left-out readings:</b> real readings removed before fitting, then predicted, so a method can be scored against something it did not see.</li>
+    </ul>
+  </details>
 </section>
 
 <!-- 3 APPROACHES ----------------------------------------------------------->
 <section id="approaches">
   <h2><span class="sn">3</span>The four approaches</h2>
   <div class="summary"><b class="lbl">In plain language</b>
-    Each method fits a curve and then builds an uncertainty band in its own way. Knowing how the band is made is the key to reading the results.
+    Each method fits a curve and then builds an uncertainty band in its own way. Knowing how the band is made is the key to reading the results, so each method is described here from the idea down to the settings.
   </div>
 
   <h3><span class="chip c-gflog">GF</span> Growth functions</h3>
-  <p><code>paine_fit_all()</code> fits four curves by <code>nls</code>: monomolecular (<code>SSasymp</code>), three-parameter logistic (<code>SSlogis</code>), four-parameter logistic (<code>SSfpl</code>) and Gompertz (<code>SSgompertz</code>). The model is chosen by AIC within a scale (natural or log). Intervals come from multivariate-normal draws of the parameters using the scaled <code>vcov()</code>. The left-out-readings arms use <code>variance = "none"</code>. An extra arm, <code>natural_improved</code> (<code>varPower</code>, <code>gnls</code>), is reported separately and is not part of the main comparison.</p>
+  <p><b>The idea.</b> Assume the plant follows one of a small family of standard growth curves, and estimate the few settings that describe it (final size, rate, timing). Four curves are tried for each plant: monomolecular (steady slowing), three-parameter logistic (symmetric S-shape), four-parameter logistic (S-shape with a free lower level) and Gompertz (S-shape that slows more gradually after the midpoint). This follows the workflow of Paine et al. (2012).</p>
+  <p><b>The detail.</b> Each curve is fitted by non-linear least squares (<code>nls</code>, with self-starting models <code>SSasymp</code>, <code>SSlogis</code>, <code>SSfpl</code> and <code>SSgompertz</code>). The curve is chosen by AIC, separately on the natural scale (GF (nat)) and the log scale (GF (log)). Uncertainty comes from random draws of the parameters from a multivariate normal distribution, using the scaled covariance matrix of the fit; growth rates are calculated from each draw. A fit fails if no curve can be fitted, the covariance is unusable, fewer than half the draws are finite, or the predicted median is zero or below; a failure counts as a miss.</p>
+  <p>The left-out-readings arms assume constant noise (no variance function). A further arm, GF (nat) with a variance that grows with size, is reported separately as an extra and is not part of the main comparison.</p>
 
   <h3><span class="chip c-spl">SPL</span> ASReml smoothing spline</h3>
-  <p>ASReml-R cubic smoothing spline: <code>resp ~ day</code> with random <code>spl(day)</code>, fitted by REML. Slopes come from finite differences (h = 0.05 days) on the predictions and their covariance, and bands from multivariate-normal draws of the prediction covariance. On the log scale RGR is the slope and AGR is size × RGR. ASReml was run on one thread.</p>
+  <p><b>The idea.</b> Let the data draw a smooth curve, with the amount of smoothing estimated from the data rather than chosen.</p>
+  <p><b>The detail.</b> An ASReml-R cubic smoothing spline: size (or log size) against day, with a random <code>spl(day)</code> term, fitted by REML. Predictions and their covariance come from the fit. Growth rates are slopes calculated by finite differences (step 0.05 days) on the predictions, and bands come from multivariate-normal draws of the prediction covariance. On the log scale RGR is the slope and AGR is size × RGR. For the left-out readings, the interval is the predicted median ± 1.645 standard deviations, where the variance is the prediction error variance plus the residual variance. Fits that stop with a singular matrix or without converging are counted as failures and not patched. ASReml was run on one thread.</p>
 
   <h3><span class="chip c-gp">GP</span> Gaussian process</h3>
-  <p>A marginal-likelihood Gaussian process (<code>fit_gp_marginal</code>, Stan model <code>gp_marginal_matern52_deriv.stan</code>) with a Matérn 5/2 kernel, fitted on the log scale with constant residual standard deviation. RGR is the derivative f′ and AGR is exp(f) f′, both from joint posterior draws. A fit is flagged if divergences or treedepth hits reach 1% of draws, max R-hat exceeds 1.01, or minimum bulk ESS falls below 400.</p>
+  <p><b>The idea.</b> Treat the growth curve as one draw from a family of smooth curves with a stated amount of wiggle (the length-scale), and let the readings narrow that family. Away from the readings the curve relaxes towards a straight line, and the band widens.</p>
+  <p><b>The detail.</b> A marginal-likelihood Gaussian process (<code>fit_gp_marginal</code>, Stan model <code>gp_marginal_matern52_deriv.stan</code>) with a Matérn 5/2 kernel, fitted on the log scale with a constant residual standard deviation. The Matérn kernel allows curves that are smooth but not infinitely so, which is more plausible for plants than a squared-exponential kernel. RGR is the derivative f′, and AGR is exp(f) f′; both are taken from joint posterior draws, so the uncertainty in a rate is not found by dividing one uncertain number by another. Four chains of 2,000 iterations (1,000 warm-up), maximum tree depth 10, 95% bands, evaluated on days 1 to 44. A fit is flagged if divergences or tree-depth hits reach 1% of draws, if the largest R-hat is above 1.01, or if the smallest bulk effective sample size is below 400. Flagged fits are kept and counted as worked.</p>
   <details><summary>Priors and software</summary>
     <ul class="tight">
       <li>length-scale ~ inverse-gamma(2.789147, 16.092788)</li>
       <li>GP standard deviation ~ half Student-t(3, 0, sd_scale)</li>
       <li>slope b ~ normal(0, b_scale); intercept ~ Student-t(3, ly_med, sd_scale); sigma ~ half-normal(0, 1)</li>
+      <li>Sampler: adapt_delta 0.8. The GP settings are frozen from the simulation work and were not tuned on the real data.</li>
       <li>rstan 2.32.7, R 4.5.2</li>
     </ul>
   </details>
 
   <h3><span class="chip c-gpl">GP+L</span> Gaussian process with a logistic mean</h3>
-  <p>The GP above with a logistic mean function in place of the straight line on the log scale: size follows a three-parameter logistic (plateau, rate, midpoint), and its three parameters are sampled jointly with the GP settings, using priors set by rules from each curve’s own readings. Sampled with <code>adapt_delta = 0.99</code>. In the script (<code>00_fit-gp-mm.R</code>, version 0.1, 20 Nov 2026, md5 b102382c…) the idea that a logistic mean reduces the sag between readings and the surge in growth rate at the end is labelled a hypothesis and “untested”; the script records no test result. The comparisons on this page are the test.</p>
+  <p><b>The idea.</b> The same Gaussian process, but the curve wiggles around an S-shape that levels off, rather than around a straight line. Where readings are sparse, the fit then relaxes to a plateau instead of running on.</p>
+  <p><b>The detail.</b> The straight line on the log scale is replaced by the log of a three-parameter logistic (plateau K, rate r, midpoint tm). The three parameters are sampled jointly with the GP settings, with the closed-form marginal likelihood kept. The priors come from rules applied to each curve’s own readings: K is centred on the largest reading (log scale, standard deviation 0.5); r is centred on the steepest slope between consecutive reading days, clipped to between 0.02 and 1.5 per day (standard deviation 0.75 on the log scale); and tm is centred on the day the straight-line interpolation of the day means first reaches half the largest reading (standard deviation 7 days). Sampled with <code>adapt_delta = 0.99</code>. In the script (<code>00_fit-gp-mm.R</code>, version 0.1, 20 Nov 2026, md5 b102382c…) the idea that a logistic mean reduces the sag between readings and the surge in growth rate at the end is labelled a hypothesis and “untested”; the script records no test result. The comparisons on this page are the test.</p>
+  <p>A two-stage form (fit a logistic first, then a GP on what is left) was also built and is shown in the Step 3 table in the simulation section; it is not one of the five arms.</p>
 
   <h3>Why the log scale</h3>
-  <p>On the log scale RGR is simply the slope of the curve, and growth rates come from joint draws, which avoids dividing one uncertain number by another. We do not claim that the log scale <em>causes</em> any pattern in the coverage of the log growth-function arm; that was not isolated.</p>
+  <p>On the log scale RGR is simply the slope of the curve, and growth rates come from joint draws, which avoids dividing one uncertain number by another. Back-transforming each draw, rather than the point estimate, avoids a bias in the size band. We do not claim that the log scale <em>causes</em> any pattern in the coverage of the log growth-function arm; that was not isolated.</p>
 
   <div class="slot"><span class="tag">Table slot</span>
     <div class="cap">Software versions</div>
@@ -241,21 +257,28 @@
 <section id="methods">
   <h2><span class="sn">5</span>Methods</h2>
   <div class="summary"><b class="lbl">In plain language</b>
-    How we scored the methods, and the rules we applied so that no method gains by failing or by being judged on easy cases.
+    We built simulated plants with known growth curves, measured them on schedules copied from the real Arabidopsis plants, added noise, and asked each method to recover the curve and its rates. We then removed real readings from Arabidopsis plants and asked each method to predict them. The rules below stop any method gaining by failing or by being judged on easy cases.
   </div>
 
-  <h3>Simulation design</h3>
+  <h3>Simulated plants</h3>
+  <p><b>True curves.</b> Five growth curves in three groups, so that the growth-function methods are not tested only on their home ground:</p>
   <ul class="tight">
-    <li>25 scenarios × 50 simulated plants per scenario.</li>
-    <li>Test half uses replicates 121 to 130.</li>
-    <li>Sampling designs: dense, thin7, thin5, thin4 (readings per plant).</li>
-    <li>Truth is a known, noise-free curve; bands are for that mean curve and its growth rates, not for a new reading.</li>
+    <li><b>Shapes the growth functions are built for:</b> logistic and Gompertz.</li>
+    <li><b>A near miss:</b> Richards, close to those but not exactly any of them.</li>
+    <li><b>Outside the standard shapes:</b> a two-phase curve (two separate rises) and a growth-then-decline curve (growth followed by shrinkage).</li>
   </ul>
+  <p>Plateaus are 5,000 to 6,000 mm² and fastest growth is mostly near day 28. Each curve has a small starting size (y0 = 5 mm²) added to the whole curve, because a plain S-shape with the real timing is far smaller on day 1 than the real plants are, which makes early readings clamp at zero too often. The true size, AGR and RGR are known on every day.</p>
+  <p><b>Sampling designs</b> come from the real Arabidopsis schedules. <em>Dense</em> is the 14 days measured on nearly every dense plant (days 3, 6, 8, 10, 13, 15, 17, 20, 24, 27, 31, 34, 36 and 44). <em>Thin7</em>, <em>thin5</em> and <em>thin4</em> keep a random 7, 5 or 4 of those days. <em>Sparse</em> is days 24, 27 and 44 only, as for the real stationary plants.</p>
+  <p><b>Noise.</b> A reading is the true size plus noise with standard deviation √(floor² + (proportion × size)²), so larger plants are noisier. The three levels are low (1.5% and 1 mm²), medium (4.5% and 3 mm²) and high (9% and 8 mm²). Readings that fall below zero are set to zero.</p>
+  <p><b>Scenarios and replicates.</b> A scenario is one curve, one noise level and one design. The full grid is 5 curves × 3 noise levels × 5 designs. This report uses 25 of them: the dense design at several noise levels, thin7, thin5 and thin4 at medium noise, and one sparse scenario. Each scenario is simulated many times; the test half (replicates 121 to 130, giving 250 datasets) is the half reported here, and a separate tuning half was used only for choices made before the test half was run. Every dataset has its own random seed, so any one can be regenerated alone.</p>
+  <p><b>Spikes.</b> To test one wrong reading, the earliest reading is replaced by s times the 90th percentile of the dataset’s readings, with s = 0.05, 0.12 or 0.30.</p>
   <div class="simnote"><b>Read with every simulation result.</b> Simulated truths are very smooth, so a smoothing method doing well is not evidence for real data. The simulated logistic is a logistic plus 5 mm². Spikes hit only the earliest reading.</div>
 
-  <h3>Scoring rules</h3>
+  <h3>Scoring rules for the simulation</h3>
   <ul class="tight">
-    <li><b>Coverage</b> is the mean, over datasets, of the share of days whose band contains the truth. A failed fit counts as a total miss, so no method gains by failing.</li>
+    <li><b>Coverage</b> is the mean, over datasets, of the share of days (1 to 44) whose 95% band contains the truth, for size, AGR and RGR. A failed fit counts as a total miss, so no method gains by failing.</li>
+    <li><b>Band width</b> is the median width of the size band. <b>Interval score</b> combines width with a penalty when the truth is outside the band; lower is better.</li>
+    <li><b>End-of-series AGR error</b> (as a percentage of the peak AGR) and <b>mid-gap size error</b> (as a percentage of the plateau K) check the two places a smoother tends to go wrong: the last readings and the gap between sparse ones.</li>
     <li><b>Accuracy and band width</b> are computed on fits that worked and always shown beside the failure count.</li>
     <li>Arms are compared only on scenarios every arm has, and paired by dataset (every method sees the same data).</li>
     <li>Monte Carlo error is reported; differences under about twice the standard error are not read.</li>
@@ -263,13 +286,15 @@
   </ul>
 
   <h3>Left-out readings (Arabidopsis)</h3>
-  <ul class="tight">
-    <li><b>H1</b> hides the last reading, <b>H2</b> the last two, <b>H3</b> everything after day 30.</li>
-    <li>Intervals are 90%. Failed fits count as misses.</li>
-    <li>Two trivial baselines are included for scale, including “repeat the last reading”.</li>
-    <li>Where the cut falls relative to the plateau changes the ranking, so results are shown for each cut.</li>
-  </ul>
+  <p><b>Data.</b> One genotype (C24), the moving plants, with sizes as rosette area in mm² (section 4).</p>
+  <p><b>Design.</b> <b>H1</b> removes the last reading of each plant, <b>H2</b> the last two, and <b>H3</b> every reading after day 30. Each method is fitted to the remaining readings and predicts the ones removed. The design, measures and exclusions were declared before any fit and not changed afterwards. Where the cut falls relative to the plateau changes the ranking, so results are shown for each cut.</p>
+  <p><b>Predictions and intervals.</b> The GP and GP+L predictions are posterior draws of the log size plus residual noise; the GP+L priors are recomputed from the remaining readings, so its plateau prior is centred on the largest remaining reading. The GF predictions draw parameters from a multivariate normal, draw the residual variance, and add noise on the arm’s own scale. SPL intervals are described in section 3. All intervals are 90%, taken as the 5% and 95% quantiles of the draws (or the normal interval for SPL).</p>
+  <p><b>Measures.</b> The absolute error of the median prediction on the log scale; the share of left-out readings inside the 90% interval; interval width; and whether the predicted median is above or below the reading. Failed fits count as misses for the interval share, and failure counts sit beside every error.</p>
+  <p><b>Baselines.</b> Two trivial predictors give a sense of scale: “repeat the last reading” and a straight line on the log scale through the last two readings.</p>
   <div class="holdout"><b>Label.</b> One genotype (Arabidopsis C24, moving plants). GP = frozen, simulation settings, no mean function. Scored on left-out readings only; readings from one plant are not independent.</div>
+
+  <h3>Reproducibility</h3>
+  <p>Each dataset and each fit has a recorded random seed. The method scripts are frozen, meaning not edited after they were first used, and are listed by name and md5 in the file list kept with this report. Stan fits used four chains. ASReml was run on one thread.</p>
 </section>
 
 <!-- 6 SIMULATION ----------------------------------------------------------->
@@ -290,7 +315,7 @@
   <div class="slot"><span class="tag">Figure slot</span><div class="cap">Dataset-by-dataset differences, with Monte Carlo error</div>
     <div class="src">{{fig_paired_gf}} ← mm3_fits_all</div></div>
 
-  <h3>Spike robustness and the SC1 rule</h3>
+  <h3>Spike robustness and a spike-cleaning rule</h3>
   <div class="slot"><span class="tag">Figure slot</span><div class="cap">Effect of an early spike (P1 to P5; SC1 d1 to d3)</div>
     <div class="src">{{fig_spike}} ← A3 refit and P1–P5 source CSVs; SC1 d1–d3</div></div>
 
@@ -333,7 +358,7 @@
   <h3>Near the plateau</h3>
   <p>Close to the plateau, the trivial baseline “repeat the last reading” is about as close as GP+L: {{c2_carry_H1}} against {{c2_mj_H1}} at H1 and {{c2_carry_H2}} against {{c2_mj_H2}} at H2 (median absolute log error). Plain natural-scale arms have far-too-narrow intervals (inside the 90% interval at H3: GF (nat) {{c3_inc_nn}}, SPL (nat) {{c3_inc_sn}}), and SPL (nat) has no fit for {{c3_fail_sn}} readings at H3.</p>
 
-  <h3>Extra arm: <code>natural_improved</code> (report only)</h3>
+  <h3>Extra arm: GF (nat) with a variance function (report only)</h3>
   <p>Reported for completeness and not part of the main comparison. Failed <em>plants</em> and failed <em>readings</em> are different counts and are kept separate here.</p>
   <div class="slot"><span class="tag">Table slot</span><div class="cap">natural_improved arm, with erratum text carried</div>
     <div class="src">{{tbl_improved}} ← A3 and spline reports</div></div>
@@ -350,7 +375,7 @@
     <li>The real-data test is one genotype, and readings from one plant are not independent.</li>
     <li>Rankings depend on where the cut falls relative to the plateau.</li>
     <li>The cause of the log-scale growth-function coverage was not isolated.</li>
-    <li>The wheat M-J look has not been run (it needs the lodging cut-point list).</li>
+    <li>The wheat GP+L look has not been run (it needs the lodging cut-point list).</li>
   </ul>
   <div class="slot"><span class="tag">Table slot</span><div class="cap">Risk table, unexplained items, retractions that bear on wording</div>
     <div class="src">{{tbl_limits}} ← controller state file, section 7</div></div>
@@ -367,7 +392,7 @@
 </section>
 
 <!-- 11 SOURCES ------------------------------------------------------------->
-<section id="sources">
+<section id="sources" hidden style="display:none">
   <h2><span class="sn">11</span>Sources</h2>
   <div class="summary"><b class="lbl">How to check a number</b>
     Every number on this page comes from a named saved file. The table lists each number, its file and the file's md5.
@@ -382,11 +407,11 @@
 
 <footer>
   <div class="in">
-    AAGI is an investment of the Grains Research and Development Corporation. <span class="verify">funding wording not yet verified</span>
+    AAGI is an investment of the Grains Research and Development Corporation.
     <div class="logos">
-      <img src="assets/GRDC_logo.png" alt="Grains Research and Development Corporation" height="56">
+      <img src="assets/ANU_logo.png" alt="The Australian National University" height="56">
+      <img src="assets/GRDC-primary-logo-rgb.svg" alt="Grains Research and Development Corporation" height="96">
       <img src="assets/AAGI_logo.png" alt="Analytics for the Australian Grains Industry" height="56">
-      <span class="logo-ph">School logo (Research School of Finance, Actuarial Studies and Statistics): to be supplied</span>
     </div>
   </div>
 </footer>
